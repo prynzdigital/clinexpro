@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { Open_Sans } from "next/font/google";
+import { Roboto } from "next/font/google";
 import "../globals.css";
 
-const openSans = Open_Sans({ subsets: ["latin"], variable: "--font-open-sans" });
+const roboto = Roboto({ subsets: ["latin"], variable: "--font-roboto" });
 
 export const metadata: Metadata = {
   title: { default: "Clinex Pro Admin", template: "%s | Clinex Pro Admin" },
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function AdminRootLayout({ children }: LayoutProps<"/admin">) {
   return (
-    <html lang="en" className={`${openSans.variable} h-full antialiased`}>
+    <html lang="en" className={`${roboto.variable} h-full antialiased`}>
       <body className="min-h-full bg-surface-alt font-sans">{children}</body>
     </html>
   );

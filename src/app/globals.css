@@ -29,7 +29,7 @@
   --color-surface: var(--surface);
   --color-surface-alt: var(--surface-alt);
   --color-danger: var(--danger);
-  --font-sans: var(--font-open-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-roboto), ui-sans-serif, system-ui, sans-serif;
 }
 
 html {

@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
-import { Open_Sans } from "next/font/google";
+import { Roboto } from "next/font/google";
 import "../globals.css";
 import { hasLocale, LOCALES, SITE_URL, alternates } from "@/lib/i18n";
 import { getDictionary } from "@/dictionaries";
@@ -11,7 +11,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { JsonLd } from "@/components/json-ld";
 import { Pwa } from "@/components/pwa";
 
-const openSans = Open_Sans({ subsets: ["latin"], variable: "--font-open-sans" });
+const roboto = Roboto({ subsets: ["latin"], variable: "--font-roboto" });
 
 export const dynamicParams = false;
 export function generateStaticParams() {
@@ -75,7 +75,7 @@ export default async function LangLayout({ children, params }: LayoutProps<"/[la
   };
 
   return (
-    <html lang={lang} data-scroll-behavior="smooth" className={`${openSans.variable} h-full antialiased`}>
+    <html lang={lang} data-scroll-behavior="smooth" className={`${roboto.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col font-sans">
         <JsonLd data={business} />
         <SiteHeader lang={lang} nav={t.nav} />
