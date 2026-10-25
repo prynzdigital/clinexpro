@@ -10,10 +10,13 @@ export function MobileMenu({
   links,
   lang,
   labels,
+  light = false,
 }: {
   links: { href: string; label: string }[];
   lang: Locale;
   labels: { menu: string; close: string; language: string };
+  /** White icon, for use over the dark home hero. */
+  light?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -21,7 +24,7 @@ export function MobileMenu({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="grid size-10 place-items-center rounded-full text-ink hover:bg-surface-alt"
+        className={`grid size-10 place-items-center rounded-full ${light ? "text-white hover:bg-white/15" : "text-ink hover:bg-surface-alt"}`}
         aria-label={labels.menu}
         aria-expanded={open}
       >

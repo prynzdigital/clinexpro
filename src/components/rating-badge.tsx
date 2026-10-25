@@ -1,7 +1,7 @@
 import { REVIEWS } from "@/content/reviews";
 
 /** "★★★★★ 5.0 · 36 reviews" badge. Renders nothing until real review data is set. */
-export function RatingBadge({ label }: { label: string }) {
+export function RatingBadge({ label, light = false }: { label: string; light?: boolean }) {
   const { rating, count, initials, source, sourceUrl } = REVIEWS;
   if (rating === null || count === 0) return null;
 
@@ -24,8 +24,8 @@ export function RatingBadge({ label }: { label: string }) {
             </svg>
           ))}
         </span>
-        <span className="text-sm text-ink-soft">
-          <strong className="text-ink">{rating.toFixed(1)}</strong> · {count} {label} · {source}
+        <span className={`text-sm ${light ? "text-white/75" : "text-ink-soft"}`}>
+          <strong className={light ? "text-white" : "text-ink"}>{rating.toFixed(1)}</strong> · {count} {label} · {source}
         </span>
       </span>
     </>

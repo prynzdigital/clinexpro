@@ -4,7 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Locale } from "@/lib/i18n";
 
-export function LangSwitch({ lang, label, className = "" }: { lang: Locale; label: string; className?: string }) {
+export function LangSwitch({
+  lang,
+  label,
+  className = "",
+  light = false,
+}: {
+  lang: Locale;
+  label: string;
+  className?: string;
+  light?: boolean;
+}) {
   const pathname = usePathname();
   const other: Locale = lang === "en" ? "fr" : "en";
   const href = pathname.replace(/^\/(en|fr)(?=\/|$)/, `/${other}`);
@@ -12,7 +22,9 @@ export function LangSwitch({ lang, label, className = "" }: { lang: Locale; labe
     <Link
       href={href}
       hrefLang={other}
-      className={`items-center rounded-full px-3 py-2 text-sm font-medium text-ink-soft hover:text-brand-strong ${className}`}
+      className={`items-center rounded-full px-3 py-2 text-sm font-medium transition-colors ${
+        light ? "text-white/85 hover:text-white" : "text-ink-soft hover:text-brand-strong"
+      } ${className}`}
     >
       {label}
     </Link>

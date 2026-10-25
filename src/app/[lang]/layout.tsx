@@ -78,7 +78,7 @@ export default async function LangLayout({ children, params }: LayoutProps<"/[la
     <html lang={lang} data-scroll-behavior="smooth" className={`${openSans.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col font-sans">
         <JsonLd data={business} />
-        <SiteHeader lang={lang} t={t} />
+        <SiteHeader lang={lang} nav={t.nav} />
         <main className="flex-1">{children}</main>
         <SiteFooter lang={lang} t={t} />
         <Pwa labels={t.pwa} />
