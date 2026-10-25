@@ -22,7 +22,7 @@ export default async function ContactPage({ params }: PageProps<"/[lang]/contact
     { icon: "phone", label: t.contact.phone, value: BUSINESS.phone, href: BUSINESS.phoneHref },
     { icon: "chat", label: t.contact.whatsapp, value: t.contact.chat, href: BUSINESS.whatsappHref },
     { icon: "mail", label: t.contact.email, value: BUSINESS.email, href: `mailto:${BUSINESS.email}` },
-    { icon: "clock", label: t.contact.hours, value: BUSINESS.hours },
+    { icon: "clock", label: t.contact.hours, value: BUSINESS.hours[lang] },
   ];
   return (
     <div className="container-page grid gap-10 py-12 sm:py-16 lg:grid-cols-[1.4fr_1fr] lg:items-end">

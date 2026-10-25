@@ -94,7 +94,7 @@ export function SiteFooter({ lang, t }: { lang: Locale; t: Dictionary }) {
             </li>
             <li className="flex gap-3">
               <Icon name="clock" width={18} height={18} className="mt-0.5 shrink-0 text-accent" />
-              <span className="text-white/75">{BUSINESS.hours}</span>
+              <span className="text-white/75">{BUSINESS.hours[lang]}</span>
             </li>
           </ul>
           <Link href={`/${lang}/book`} className="btn-primary mt-6 min-h-11 px-5 text-sm">

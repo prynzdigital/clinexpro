@@ -41,6 +41,40 @@ export function HeroSlider({
   const go = (i: number) => setIndex((i + slides.length) % slides.length);
   const running = !paused && !hovered;
 
+  const progress = (i: number, vertical = false) => {
+    if (i < index) return <span className="block size-full bg-white/70" />;
+    if (i !== index) return null;
+    return (
+      <span
+        key={index}
+        onAnimationEnd={() => go(index + 1)}
+        style={{ animationDuration: `${SLIDE_MS}ms`, animationPlayState: running ? "running" : "paused" }}
+        className={`block size-full bg-accent motion-reduce:animate-none ${
+          vertical ? "origin-top animate-hero-progress-y" : "origin-left animate-hero-progress"
+        }`}
+      />
+    );
+  };
+
+  const control = "grid size-10 place-items-center rounded-full border border-white/25 bg-white/10 backdrop-blur-md hover:bg-white/20";
+  const arrows = (axis: "h" | "v") => (
+    <>
+      <button type="button" onClick={() => go(index - 1)} aria-label={labels.prev} className={control}>
+        <Icon name="arrow" width={18} height={18} className={axis === "h" ? "rotate-180" : "-rotate-90"} />
+      </button>
+      <button type="button" onClick={() => setPaused((p) => !p)} aria-label={paused ? labels.play : labels.pause} className={`${control} max-sm:hidden`}>
+        {paused ? (
+          <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+        ) : (
+          <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" aria-hidden="true"><path d="M7 5h3v14H7zm7 0h3v14h-3z" /></svg>
+        )}
+      </button>
+      <button type="button" onClick={() => go(index + 1)} aria-label={labels.next} className={control}>
+        <Icon name="arrow" width={18} height={18} className={axis === "h" ? "" : "rotate-90"} />
+      </button>
+    </>
+  );
+
   return (
     <section
       className="relative -mt-20 flex min-h-[640px] overflow-hidden bg-navy text-white sm:min-h-[700px] lg:h-[100svh] lg:max-h-[880px]"
@@ -88,7 +122,7 @@ export function HeroSlider({
       <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-navy/70 to-transparent" />
 
       {/* Copy */}
-      <div className="container-page relative z-10 flex flex-col justify-end pb-36 pt-32 sm:justify-center sm:pb-40 lg:pb-32">
+      <div className="container-page relative z-10 flex flex-col justify-end pb-36 pt-32 sm:justify-center sm:pb-40 lg:pb-28">
         <div className="grid max-w-2xl">
           {slides.map((s, i) => {
             const active = i === index;
@@ -130,52 +164,49 @@ export function HeroSlider({
         {children && <div className="mt-6">{children}</div>}
       </div>
 
-      {/* Controls */}
-      <div className="absolute inset-x-0 bottom-0 z-10 pb-6 sm:pb-8">
+      {/* Controls: a bar along the bottom on phones and tablets, a vertical rail
+          on the right edge on large screens. Only the visible set animates, so
+          only one progress bar ever fires onAnimationEnd. */}
+      <div className="absolute inset-x-0 bottom-0 z-10 pb-6 sm:pb-8 lg:hidden">
         <div className="container-page flex items-end gap-4">
           <ol className="flex flex-1 gap-2 sm:gap-3">
             {slides.map((s, i) => (
               <li key={s.key} className="min-w-0 flex-1">
+                <button type="button" onClick={() => go(i)} aria-label={`${labels.show} ${s.label}`} aria-current={i === index} className="block w-full py-2">
+                  <span className="block h-1 overflow-hidden rounded-full bg-white/25">{progress(i)}</span>
+                </button>
+              </li>
+            ))}
+          </ol>
+          <div className="flex shrink-0 gap-2">{arrows("h")}</div>
+        </div>
+      </div>
+
+      <div className="absolute inset-y-0 right-0 z-10 hidden items-center pr-8 lg:flex xl:pr-12">
+        <div className="flex flex-col items-end gap-6">
+          <ol className="flex flex-col items-end gap-1">
+            {slides.map((s, i) => (
+              <li key={s.key}>
                 <button
                   type="button"
                   onClick={() => go(i)}
                   aria-label={`${labels.show} ${s.label}`}
                   aria-current={i === index}
-                  className="group block w-full py-2 text-left"
+                  className="group flex items-center gap-4 py-1.5"
                 >
-                  <span className={`mb-2 hidden truncate text-xs font-semibold uppercase tracking-wider lg:block ${i === index ? "text-white" : "text-white/55 group-hover:text-white/80"}`}>
+                  <span
+                    className={`text-right text-xs font-semibold uppercase tracking-wider transition-colors ${
+                      i === index ? "text-white" : "text-white/50 group-hover:text-white/85"
+                    }`}
+                  >
                     {s.label}
                   </span>
-                  <span className="block h-1 overflow-hidden rounded-full bg-white/25">
-                    {i < index && <span className="block h-full w-full bg-white/70" />}
-                    {i === index && (
-                      <span
-                        key={index}
-                        onAnimationEnd={() => go(index + 1)}
-                        style={{ animationDuration: `${SLIDE_MS}ms`, animationPlayState: running ? "running" : "paused" }}
-                        className="block h-full origin-left animate-hero-progress bg-accent motion-reduce:w-full motion-reduce:animate-none"
-                      />
-                    )}
-                  </span>
+                  <span className="block h-9 w-1 overflow-hidden rounded-full bg-white/25">{progress(i, true)}</span>
                 </button>
               </li>
             ))}
           </ol>
-          <div className="flex shrink-0 gap-2">
-            <button type="button" onClick={() => go(index - 1)} aria-label={labels.prev} className="grid size-10 place-items-center rounded-full border border-white/25 bg-white/10 backdrop-blur-md hover:bg-white/20">
-              <Icon name="arrow" width={18} height={18} className="rotate-180" />
-            </button>
-            <button type="button" onClick={() => setPaused((p) => !p)} aria-label={paused ? labels.play : labels.pause} className="hidden size-10 place-items-center rounded-full border border-white/25 bg-white/10 backdrop-blur-md hover:bg-white/20 sm:grid">
-              {paused ? (
-                <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
-              ) : (
-                <svg viewBox="0 0 24 24" width={14} height={14} fill="currentColor" aria-hidden="true"><path d="M7 5h3v14H7zm7 0h3v14h-3z" /></svg>
-              )}
-            </button>
-            <button type="button" onClick={() => go(index + 1)} aria-label={labels.next} className="grid size-10 place-items-center rounded-full border border-white/25 bg-white/10 backdrop-blur-md hover:bg-white/20">
-              <Icon name="arrow" width={18} height={18} />
-            </button>
-          </div>
+          <div className="flex gap-2">{arrows("v")}</div>
         </div>
       </div>
     </section>

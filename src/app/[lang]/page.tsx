@@ -7,11 +7,19 @@ import { getPricedService, formatMur } from "@/lib/pricing";
 import { HeroSlider, type HeroSlide } from "@/components/hero-slider";
 import { RatingBadge } from "@/components/rating-badge";
 import { Reveal } from "@/components/reveal";
+import { PromoFlipCard } from "@/components/promo-flip-card";
+import { VideoCard } from "@/components/video-card";
+import { RequestForm } from "@/components/request-form";
+import { BUSINESS } from "@/content/business";
+import { mauritiusDate } from "@/lib/dates";
 import { TOWNS } from "@/content/towns";
 import { ServiceCard } from "@/components/service-card";
 import { Icon, type IconName } from "@/components/icons";
 import { notFound } from "next/navigation";
 import heroCommercial from "../../../public/images/hero-commercial.jpg";
+import familyBooking from "../../../public/images/family-booking.jpg";
+import videoPoster from "../../../public/images/services/deep-cleaning.jpg";
+import requestBackground from "../../../public/images/hero-commercial.jpg";
 import howBackground from "../../../public/images/services/home-cleaning.jpg";
 import officeCleaning from "../../../public/images/services/office-cleaning.jpg";
 import mauritiusMap from "../../../public/images/mauritius-map.png";
@@ -53,17 +61,19 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         <RatingBadge label={t.home.reviews} light />
       </HeroSlider>
 
-      <div className="container-page relative z-10 -mt-px pt-6 lg:-mt-10 lg:pt-0">
-        <ul className="grid grid-cols-2 gap-3 rounded-3xl bg-white p-4 text-sm font-semibold shadow-[0_20px_50px_-20px_rgba(3,20,50,0.3)] sm:p-5 lg:grid-cols-4 lg:gap-6 lg:px-8">
-          {t.home.trust.map((item, i) => (
-            <li key={item} className="flex items-center gap-3">
-              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-soft text-brand-strong">
-                <Icon name={TRUST_ICONS[i]} width={18} height={18} />
-              </span>
-              {item}
-            </li>
-          ))}
-        </ul>
+      <div className="container-page relative z-10 pt-8 lg:-mt-14 lg:pt-0">
+        <PromoFlipCard
+          trust={t.home.trust.map((label, i) => ({ label, icon: TRUST_ICONS[i] }))}
+          ad={{
+            image: familyBooking,
+            imageAlt: t.home.plansImageAlt,
+            title: t.home.plansTitle,
+            body: t.home.plansBody,
+            plans: t.home.plans,
+            cta: { href: `/${lang}/book?service=home-cleaning`, label: t.home.ctaBook },
+          }}
+          labels={{ showOffer: t.home.showOffer, showHighlights: t.home.showHighlights }}
+        />
       </div>
 
       <section className="container-page py-14 sm:py-20">
@@ -75,6 +85,28 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           {home.map((s) => (
             <ServiceCard key={s.slug} service={s} lang={lang} labels={t.services} />
           ))}
+          <Link
+            href={`/${lang}/business`}
+            className="group relative flex min-h-[22rem] flex-col justify-end overflow-hidden rounded-2xl bg-navy p-6 text-white shadow-[0_20px_50px_-20px_rgba(3,20,50,0.45)]"
+          >
+            <Image
+              src={officeCleaning}
+              alt="Clinex Pro team cleaning an office"
+              fill
+              sizes="(min-width: 1024px) 360px, (min-width: 640px) 50vw, 100vw"
+              className="object-cover object-[50%_20%] transition duration-500 group-hover:scale-105"
+            />
+            <span className="absolute inset-0 bg-gradient-to-t from-navy via-navy/70 to-navy/10" />
+            <span className="relative space-y-3">
+              <span className="block text-xs font-semibold uppercase tracking-[0.2em] text-accent">{t.home.businessCardEyebrow}</span>
+              <span className="block text-xl font-bold leading-snug">{t.home.businessTitle}</span>
+              <span className="block text-sm text-white/75">{t.home.businessBody}</span>
+              <span className="btn-glow mt-2 min-h-11 px-5 text-sm">
+                {t.home.businessCta}
+                <Icon name="arrow" width={16} height={16} />
+              </span>
+            </span>
+          </Link>
         </div>
       </section>
 
@@ -122,41 +154,130 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         </div>
       </section>
 
-      <section className="container-page py-14 sm:py-20">
-        <div className="grid gap-8 rounded-3xl bg-navy p-6 text-white sm:p-10 lg:grid-cols-2 lg:items-center">
-          <div className="space-y-3">
-            <h2 className="text-3xl font-bold tracking-tight">{t.home.plansTitle}</h2>
-            <p className="text-white/75">{t.home.plansBody}</p>
-            <Link href={`/${lang}/book?service=home-cleaning`} className="btn-primary mt-2">
-              {t.home.ctaBook}
-            </Link>
+      {/* Who we are, with Clinex Pro's own YouTube video. */}
+      <section className="container-page grid gap-12 py-20 sm:py-24 lg:grid-cols-[1fr_1.1fr] lg:items-center lg:gap-16">
+        <Reveal>
+          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.22em] text-brand-strong">{t.home.whoEyebrow}</p>
+          <h2 className="text-3xl font-bold leading-tight tracking-tight text-balance sm:text-4xl">
+            {t.home.whoTitle}
+            <span className="text-brand">.</span>
+          </h2>
+          <div className="mt-5 space-y-4 text-ink-soft">
+            {t.home.whoBody.map((p) => (
+              <p key={p}>{p}</p>
+            ))}
           </div>
-          <ul className="grid gap-3 sm:grid-cols-3">
-            {t.home.plans.map((p) => (
-              <li key={p.label} className="rounded-2xl bg-white/10 p-5">
-                <p className="text-sm text-white/75">{p.label}</p>
-                <p className="text-2xl font-bold text-accent">{p.saving}</p>
+          <ul className="mt-7 grid gap-3 sm:grid-cols-2">
+            {t.home.whoPoints.map((point) => (
+              <li key={point} className="flex items-start gap-3 text-sm font-semibold">
+                <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-brand-soft text-brand-strong">
+                  <Icon name="check" width={14} height={14} />
+                </span>
+                {point}
               </li>
             ))}
           </ul>
-        </div>
+          <Link
+            href={`/${lang}/about`}
+            className="group mt-8 inline-flex items-center gap-2 border-b border-ink/40 pb-0.5 text-sm font-semibold hover:border-brand hover:text-brand-strong"
+          >
+            {t.home.whoCta}
+            <Icon name="arrow" width={16} height={16} className="text-brand transition group-hover:translate-x-0.5" />
+          </Link>
+        </Reveal>
+        <Reveal delay={200}>
+          <VideoCard
+            videoId="dqcwIcJlPOk"
+            poster={videoPoster}
+            title={t.home.videoTitle}
+            caption={t.home.videoCaption}
+            playLabel={t.home.videoPlay}
+          />
+        </Reveal>
       </section>
 
-      <section className="container-page pb-14 sm:pb-20">
-        <div className="card grid overflow-hidden lg:grid-cols-[1fr_1.1fr]">
-          <Image
-            src={officeCleaning}
-            alt="Clinex Pro team cleaning an office"
-            sizes="(min-width: 1024px) 520px, 100vw"
-            className="h-56 w-full object-cover object-[50%_15%] sm:h-72 lg:h-full"
-          />
-          <div className="space-y-4 p-6 sm:p-10 lg:self-center">
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{t.home.businessTitle}</h2>
-            <p className="text-ink-soft">{t.home.businessBody}</p>
-            <Link href={`/${lang}/business`} className="btn-primary">
-              {t.home.businessCta}
-            </Link>
-          </div>
+      {/* Booking request: dark glass info card + light glass form over a blurred photo. */}
+      <section id="request" className="relative isolate overflow-hidden py-20 sm:py-24">
+        <div className="absolute inset-0 -z-10" aria-hidden="true">
+          <Image src={requestBackground} alt="" fill sizes="100vw" className="scale-110 object-cover blur-sm" />
+          <div className="absolute inset-0 bg-navy/80" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#1e73be]/25 via-transparent to-brand/15" />
+        </div>
+        <div className="container-page grid gap-6 lg:grid-cols-[0.85fr_1.15fr] lg:gap-8">
+          <Reveal className="h-full">
+            <div className="flex h-full flex-col rounded-[1.75rem] border border-white/15 bg-white/10 p-6 text-white shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-8">
+              <h2 className="text-2xl font-bold sm:text-3xl">{t.home.requestTitle}</h2>
+              <p className="mt-2 text-white/75">{t.home.requestSubtitle}</p>
+
+              <ol className="mt-6 space-y-5">
+                {t.home.requestSteps.map((step, i) => (
+                  <li key={step.title} className="flex gap-4">
+                    <span className="grid size-8 shrink-0 place-items-center rounded-full border border-white/30 text-sm font-bold">{i + 1}</span>
+                    <span>
+                      <span className="block font-semibold">{step.title}</span>
+                      <span className="block text-sm text-white/70">{step.body}</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+
+              <ul className="mt-7 divide-y divide-white/10 border-y border-white/10">
+                {[
+                  { icon: "phone" as const, label: t.home.requestCall, value: BUSINESS.phone, href: BUSINESS.phoneHref },
+                  { icon: "mail" as const, label: t.home.requestEmail, value: BUSINESS.email, href: `mailto:${BUSINESS.email}` },
+                  { icon: "pin" as const, label: t.home.requestVisit, value: `${BUSINESS.street}, ${BUSINESS.locality}` },
+                  { icon: "clock" as const, label: t.home.requestHours, value: BUSINESS.hours[lang] },
+                ].map((row) => {
+                  const body = (
+                    <>
+                      <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-white/20 bg-white/5">
+                        <Icon name={row.icon} width={18} height={18} />
+                      </span>
+                      <span>
+                        <span className="block text-xs font-semibold uppercase tracking-wider text-white/60">{row.label}</span>
+                        <span className="block font-semibold">{row.value}</span>
+                      </span>
+                    </>
+                  );
+                  return (
+                    <li key={row.label}>
+                      {row.href ? (
+                        <a href={row.href} className="flex items-center gap-4 py-4 hover:text-accent">{body}</a>
+                      ) : (
+                        <div className="flex items-center gap-4 py-4">{body}</div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <ul className="mt-6 space-y-2 border-t border-dashed border-white/20 pt-5 text-sm text-white/80">
+                {t.home.requestChecks.map((c) => (
+                  <li key={c} className="flex gap-2">
+                    <Icon name="check" width={16} height={16} className="mt-0.5 shrink-0 text-accent" />
+                    {c}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-auto pt-6">
+                <a href={BUSINESS.phoneHref} className="btn-glow w-full">
+                  <Icon name="phone" width={18} height={18} />
+                  {t.home.requestCallCta} {BUSINESS.phone}
+                </a>
+              </div>
+            </div>
+          </Reveal>
+
+          <Reveal delay={150} className="h-full">
+            <div className="h-full rounded-[1.75rem] border border-white/60 bg-gradient-to-b from-white/85 to-white/70 shadow-2xl shadow-black/25 backdrop-blur-xl">
+              <RequestForm
+                t={t.home.requestForm}
+                services={SERVICES.map((sv) => ({ slug: sv.slug, name: sv.name[lang] }))}
+                minDate={mauritiusDate(1)}
+              />
+            </div>
+          </Reveal>
         </div>
       </section>
 

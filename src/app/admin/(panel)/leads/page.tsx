@@ -2,6 +2,7 @@ import { desc } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { requireAdmin } from "@/lib/auth";
 import en from "@/dictionaries/en";
+import { getService } from "@/content/services";
 import { Empty, LeadBadge, PageHeader, label, shortDate } from "../ui";
 import { updateLeadStatus } from "../actions";
 
@@ -14,7 +15,7 @@ export default async function LeadsPage() {
 
   return (
     <>
-      <PageHeader title="Business leads" subtitle="Office, hotel and villa enquiries from the website" />
+      <PageHeader title="Business leads" subtitle="Business enquiries and booking requests from the website" />
       {leads.length === 0 ? (
         <Empty>No enquiries yet.</Empty>
       ) : (
@@ -25,7 +26,18 @@ export default async function LeadsPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="font-semibold">{lead.company}</h2>
                   <LeadBadge status={lead.status} />
+                  <span className="rounded-full bg-surface-alt px-2.5 py-0.5 text-xs font-medium text-ink-soft">
+                    {lead.source === "home-request" ? "Booking request" : "Business page"}
+                  </span>
                 </div>
+                {lead.source === "home-request" && (
+                  <p className="text-sm">
+                    <span className="font-medium">{lead.service ? getService(lead.service)?.name.en : "Service not specified"}</span>
+                    {lead.address && <> · {lead.address}</>}
+                    {" · "}start {lead.preferredDate ? shortDate(lead.preferredDate) : "flexible"}
+                    {lead.contactTime && <> · call in the {lead.contactTime}</>}
+                  </p>
+                )}
                 <p className="text-sm text-ink-soft">
                   {en.business.sectors[lead.sector as keyof typeof en.business.sectors] ?? lead.sector}
                   {lead.town ? ` · ${lead.town}` : ""} · received {shortDate(lead.createdAt)}

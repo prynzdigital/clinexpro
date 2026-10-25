@@ -83,6 +83,7 @@ body {
 /* Hero slider: progress bar drives autoplay; slow zoom on the active photo. */
 @theme {
   --animate-hero-progress: hero-progress linear forwards;
+  --animate-hero-progress-y: hero-progress-y linear forwards;
   --animate-hero-zoom: hero-zoom 9s ease-out forwards;
   --animate-glow-pulse: glow-pulse 2.8s ease-in-out infinite;
 
@@ -93,6 +94,10 @@ body {
   @keyframes glow-pulse {
     0%, 100% { filter: drop-shadow(0 0 0 rgb(252 81 29 / 0)); }
     50% { filter: drop-shadow(0 0 14px rgb(252 81 29 / 0.55)); }
+  }
+  @keyframes hero-progress-y {
+    from { transform: scaleY(0); }
+    to { transform: scaleY(1); }
   }
   @keyframes hero-zoom {
     from { transform: scale(1.02); }

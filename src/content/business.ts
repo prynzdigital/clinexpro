@@ -7,7 +7,7 @@ export const BUSINESS = {
   email: "info@clinexpro.net",
   facebook: "https://www.facebook.com/clinexpro",
   youtube: "https://www.youtube.com/@ClinexProContractingLimited",
-  hours: "Mon–Sat 08:00–17:00",
+  hours: { en: "Mon–Sat 08:00–17:00", fr: "Lun–sam 8h00–17h00" },
   // Head office as listed on clinexpro.net.
   street: "Royal Road",
   locality: "Grand Baie",

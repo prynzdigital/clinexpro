@@ -82,6 +82,12 @@ export const leads = pgTable("leads", {
   sector: text("sector").notNull(),
   town: text("town"),
   message: text("message"),
+  // Booking-request form fields (home page); null for business-page enquiries.
+  address: text("address"),
+  service: text("service"),
+  preferredDate: date("preferred_date"),
+  contactTime: text("contact_time"),
+  source: text("source").notNull().default("business-page"),
   status: leadStatus("status").notNull().default("new"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
