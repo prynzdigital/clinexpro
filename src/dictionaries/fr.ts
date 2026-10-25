@@ -73,7 +73,9 @@ const fr: Dictionary = {
     nextSlide: "Diapositive suivante",
     servicesTitle: "Ce que nous nettoyons",
     servicesSubtitle: "Réservez les services à domicile immédiatement, ou demandez un plan sur mesure pour votre entreprise.",
+    howEyebrow: "Simple comme 1, 2, 3",
     howTitle: "Comment ça marche",
+    howSubtitle: "Du prix immédiat à une maison impeccable, sans un seul appel.",
     how: [
       { title: "Obtenez votre prix", body: "Décrivez votre espace et choisissez vos options. Le prix s'affiche en direct." },
       { title: "Choisissez un créneau", body: "Sélectionnez la date et l'heure qui vous conviennent, du lundi au samedi." },

@@ -11,11 +11,12 @@ import { ServiceCard } from "@/components/service-card";
 import { Icon, type IconName } from "@/components/icons";
 import { notFound } from "next/navigation";
 import heroCommercial from "../../../public/images/hero-commercial.jpg";
-import familyBooking from "../../../public/images/family-booking.jpg";
+import howBackground from "../../../public/images/services/home-cleaning.jpg";
 import officeCleaning from "../../../public/images/services/office-cleaning.jpg";
 import mauritiusMap from "../../../public/images/mauritius-map.png";
 
 const TRUST_ICONS: IconName[] = ["leaf", "shield", "calendar", "star"];
+const HOW_ICONS: IconName[] = ["sparkle", "calendar", "home"];
 
 export default async function Home({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
@@ -77,30 +78,45 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         </div>
       </section>
 
-      <section className="bg-surface-alt py-14 sm:py-20">
-        <div className="container-page grid gap-10 lg:grid-cols-2 lg:items-center">
-          <div>
-            <h2 className="mb-8 text-3xl font-bold tracking-tight">{t.home.howTitle}</h2>
-            <ol className="space-y-4">
+      {/* How it works: the photo stays pinned while the steps scroll over it.
+          Uses position: sticky (works on iOS, unlike background-attachment: fixed). */}
+      <section className="relative bg-navy text-white">
+        <div className="sticky top-0 h-svh overflow-hidden" aria-hidden="true">
+          <Image src={howBackground} alt="" fill sizes="100vw" className="object-cover" />
+          <div className="absolute inset-0 bg-navy/55" />
+          <div className="absolute inset-0 bg-gradient-to-r from-navy via-navy/60 to-transparent" />
+        </div>
+
+        <div className="relative -mt-[100svh] min-h-svh">
+          <div className="container-page grid gap-10 py-24 sm:py-32 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
+            <div className="lg:sticky lg:top-32 lg:self-start">
+              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-accent">{t.home.howEyebrow}</p>
+              <h2 className="text-4xl font-extrabold tracking-tight sm:text-5xl">{t.home.howTitle}</h2>
+              <p className="mt-4 max-w-md text-lg text-white/75">{t.home.howSubtitle}</p>
+              <Link href={`/${lang}/book`} className="btn-primary mt-8 shadow-lg shadow-brand/30">
+                {t.home.ctaBook}
+                <Icon name="arrow" width={18} height={18} />
+              </Link>
+            </div>
+
+            <ol className="space-y-6 sm:space-y-10 lg:space-y-[28vh] lg:py-[12vh]">
               {t.home.how.map((step, i) => (
-                <li key={step.title} className="card flex gap-4 p-5">
-                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-brand text-sm font-bold text-white">
-                    {i + 1}
-                  </span>
-                  <div>
-                    <h3 className="mb-1 text-lg font-semibold">{step.title}</h3>
-                    <p className="text-sm text-ink-soft">{step.body}</p>
+                <li
+                  key={step.title}
+                  className="rounded-3xl border border-white/15 bg-white/10 p-6 shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-8"
+                >
+                  <div className="mb-6 flex items-center justify-between">
+                    <span className="grid size-14 place-items-center rounded-2xl bg-brand text-white shadow-lg shadow-brand/30">
+                      <Icon name={HOW_ICONS[i]} width={26} height={26} />
+                    </span>
+                    <span className="text-5xl font-extrabold text-white/15 sm:text-6xl">{String(i + 1).padStart(2, "0")}</span>
                   </div>
+                  <h3 className="mb-2 text-2xl font-bold">{step.title}</h3>
+                  <p className="text-white/75">{step.body}</p>
                 </li>
               ))}
             </ol>
           </div>
-          <Image
-            src={familyBooking}
-            alt="Family booking a cleaning on a laptop"
-            sizes="(min-width: 1024px) 540px, 100vw"
-            className="h-auto w-full rounded-3xl object-cover"
-          />
         </div>
       </section>
 

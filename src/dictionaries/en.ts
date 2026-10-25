@@ -71,7 +71,9 @@ const en = {
     nextSlide: "Next slide",
     servicesTitle: "What we clean",
     servicesSubtitle: "Book home services instantly, or ask for a tailored plan for your business.",
+    howEyebrow: "Simple as 1, 2, 3",
     howTitle: "How it works",
+    howSubtitle: "From instant price to a spotless home, without a single phone call.",
     how: [
       { title: "Get an instant price", body: "Tell us about your space and pick extras. Your price updates as you go." },
       { title: "Choose a time", body: "Pick a date and time slot that suits you, Monday to Saturday." },
