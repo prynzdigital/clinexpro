@@ -63,24 +63,28 @@ export function HeroSlider({
         if (Math.abs(dx) > 50) go(index + (dx < 0 ? 1 : -1));
       }}
     >
-      {/* Photos */}
-      {slides.map((s, i) => (
-        <div
-          key={s.key}
-          aria-hidden="true"
-          className={`absolute inset-0 transition-opacity duration-[1200ms] ease-out ${i === index ? "opacity-100" : "opacity-0"}`}
-        >
-          <Image
-            src={s.image}
-            alt=""
-            fill
-            priority={i === 0}
-            sizes="100vw"
-            className={`object-cover ${i === index ? "animate-hero-zoom motion-reduce:animate-none" : ""}`}
-          />
-        </div>
-      ))}
-      <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/70 to-navy/40 lg:bg-gradient-to-r lg:from-navy/95 lg:via-navy/65 lg:to-navy/10" />
+      {/* Photos: full-bleed on phones; on large screens they fill the right
+          62% and fade into the navy behind the copy, keeping subjects clear of the text. */}
+      <div className="absolute inset-0 overflow-hidden lg:left-[38%]">
+        {slides.map((s, i) => (
+          <div
+            key={s.key}
+            aria-hidden="true"
+            className={`absolute inset-0 transition-opacity duration-[1200ms] ease-out ${i === index ? "opacity-100" : "opacity-0"}`}
+          >
+            <Image
+              src={s.image}
+              alt=""
+              fill
+              priority={i === 0}
+              sizes="(min-width: 1024px) 62vw, 100vw"
+              className={`object-cover ${i === index ? "animate-hero-zoom motion-reduce:animate-none" : ""}`}
+            />
+          </div>
+        ))}
+        <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/70 to-navy/40 lg:bg-gradient-to-r lg:from-navy lg:via-navy/25 lg:to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 hidden h-1/3 bg-gradient-to-t from-navy/80 to-transparent lg:block" />
+      </div>
       <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-navy/70 to-transparent" />
 
       {/* Copy */}
