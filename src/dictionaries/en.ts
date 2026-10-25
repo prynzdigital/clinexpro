@@ -195,6 +195,7 @@ const en = {
     email: "Email",
     hours: "Opening hours",
     chat: "Chat on WhatsApp",
+    follow: "Follow us",
   },
   business: {
     title: "Request a business quote",
@@ -292,6 +293,8 @@ const en = {
     follow: "Follow us",
     privacy: "Privacy policy",
     rights: "All rights reserved.",
+    credit: "Digital Excellence, Powered by",
+    backToTop: "Back to top",
   },
   pwa: {
     install: "Install the Clinex Pro app",
@@ -301,10 +304,8 @@ const en = {
   },
   privacy: {
     title: "Privacy policy",
-    body: [
-      "Clinex Pro Contracting Ltd collects your name, contact details, address and booking information only to provide and manage our cleaning services, in line with the Data Protection Act 2017 of Mauritius.",
-      "We never sell your data. Access is limited to staff who need it to deliver your service. You may ask us at any time to access, correct or delete your personal data by emailing info@clinexpro.net.",
-    ],
+    updated: "Last updated:",
+    contents: "Contents",
   },
 };
 

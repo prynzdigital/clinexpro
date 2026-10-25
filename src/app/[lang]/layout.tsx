@@ -10,6 +10,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { JsonLd } from "@/components/json-ld";
 import { Pwa } from "@/components/pwa";
+import { BackToTop } from "@/components/back-to-top";
 
 const roboto = Roboto({ subsets: ["latin"], variable: "--font-roboto" });
 
@@ -71,7 +72,7 @@ export default async function LangLayout({ children, params }: LayoutProps<"/[la
       opens: "08:00",
       closes: "17:00",
     },
-    sameAs: [BUSINESS.facebook, BUSINESS.youtube],
+    sameAs: [BUSINESS.facebook, BUSINESS.youtubeChannel, BUSINESS.youtube],
   };
 
   return (
@@ -81,6 +82,7 @@ export default async function LangLayout({ children, params }: LayoutProps<"/[la
         <SiteHeader lang={lang} nav={t.nav} />
         <main className="flex-1">{children}</main>
         <SiteFooter lang={lang} t={t} />
+        <BackToTop label={t.footer.backToTop} />
         <Pwa labels={t.pwa} />
       </body>
     </html>

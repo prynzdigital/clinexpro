@@ -197,6 +197,7 @@ const fr: Dictionary = {
     email: "E-mail",
     hours: "Horaires",
     chat: "Écrire sur WhatsApp",
+    follow: "Suivez-nous",
   },
   business: {
     title: "Demander un devis entreprise",
@@ -294,6 +295,8 @@ const fr: Dictionary = {
     follow: "Suivez-nous",
     privacy: "Politique de confidentialité",
     rights: "Tous droits réservés.",
+    credit: "Excellence numérique, propulsé par",
+    backToTop: "Retour en haut",
   },
   pwa: {
     install: "Installez l'application Clinex Pro",
@@ -303,10 +306,8 @@ const fr: Dictionary = {
   },
   privacy: {
     title: "Politique de confidentialité",
-    body: [
-      "Clinex Pro Contracting Ltd collecte votre nom, vos coordonnées, votre adresse et les informations de réservation uniquement pour fournir et gérer ses services, conformément au Data Protection Act 2017 de Maurice.",
-      "Nous ne vendons jamais vos données. Seul le personnel qui en a besoin y a accès. Vous pouvez à tout moment demander l'accès, la rectification ou la suppression de vos données en écrivant à info@clinexpro.net.",
-    ],
+    updated: "Dernière mise à jour :",
+    contents: "Sommaire",
   },
 };
 

@@ -6,17 +6,12 @@ import { BUSINESS } from "@/content/business";
 import { SERVICES } from "@/content/services";
 import { Icon } from "./icons";
 import { CtaCard } from "./cta-card";
+import { SocialLinks } from "./social-links";
 
 const heading = "mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-accent";
 const link = "text-white/75 transition-colors hover:text-white";
 
 export function SiteFooter({ lang, t }: { lang: Locale; t: Dictionary }) {
-  const socials = [
-    { href: BUSINESS.facebook, label: "Facebook", path: "M14 8h3V4h-3a4 4 0 0 0-4 4v2H8v4h2v6h4v-6h3l1-4h-4V8z" },
-    { href: BUSINESS.youtube, label: "YouTube", path: "M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8zM10 15V9l5.2 3z" },
-    { href: BUSINESS.whatsappHref, label: "WhatsApp", path: "M4 20l1.3-3.9A8 8 0 1 1 8 19.3z" },
-  ];
-
   return (
     <>
       {/* Call-to-action card straddling the page / footer edge: it takes its
@@ -31,23 +26,7 @@ export function SiteFooter({ lang, t }: { lang: Locale; t: Dictionary }) {
             <p className="max-w-xs text-white/75">{t.footer.tagline}</p>
             <div>
               <h2 className={heading}>{t.footer.follow}</h2>
-              <ul className="flex gap-2">
-                {socials.map((s) => (
-                  <li key={s.label}>
-                    <a
-                      href={s.href}
-                      target="_blank"
-                      rel="noopener"
-                      aria-label={s.label}
-                      className="grid size-10 place-items-center rounded-full bg-white/10 transition-colors hover:bg-brand"
-                    >
-                      <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" aria-hidden="true">
-                        <path d={s.path} />
-                      </svg>
-                    </a>
-                  </li>
-                ))}
-              </ul>
+              <SocialLinks />
             </div>
           </div>
 
@@ -110,9 +89,17 @@ export function SiteFooter({ lang, t }: { lang: Locale; t: Dictionary }) {
           </div>
         </div>
         <div className="border-t border-white/10">
-          <div className="container-page flex flex-col gap-2 py-5 text-xs text-white/60 sm:flex-row sm:justify-between">
+          <div className="container-page flex flex-col gap-3 py-5 text-xs text-white/60 md:flex-row md:items-center md:justify-between">
             <span>© {new Date().getFullYear()} {BUSINESS.legalName}. {t.footer.rights}</span>
-            <Link href={`/${lang}/privacy`} className="hover:text-white">{t.footer.privacy}</Link>
+            <span className="flex flex-wrap items-center gap-x-5 gap-y-2">
+              <Link href={`/${lang}/privacy`} className="hover:text-white">{t.footer.privacy}</Link>
+              <span>
+                {t.footer.credit}{" "}
+                <a href="https://www.gostatenext.com/" target="_blank" rel="noopener" className="font-semibold text-white/85 hover:text-accent">
+                  StateNext Labs
+                </a>
+              </span>
+            </span>
           </div>
         </div>
       </footer>

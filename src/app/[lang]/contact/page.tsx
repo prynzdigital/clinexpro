@@ -6,6 +6,7 @@ import { getDictionary } from "@/dictionaries";
 import cleanerSupplies from "../../../../public/images/cleaner-supplies.png";
 import { BUSINESS } from "@/content/business";
 import { Icon, type IconName } from "@/components/icons";
+import { SocialLinks } from "@/components/social-links";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/contact">): Promise<Metadata> {
   const { lang } = await params;
@@ -55,6 +56,10 @@ export default async function ContactPage({ params }: PageProps<"/[lang]/contact
             );
           })}
         </ul>
+        <div>
+          <p className="mb-3 text-sm font-semibold text-ink-soft">{t.contact.follow}</p>
+          <SocialLinks tone="dark" />
+        </div>
       </div>
       <div className="relative mx-auto w-full max-w-[280px] lg:max-w-[360px]">
         <div className="absolute inset-x-0 bottom-0 top-[20%] rounded-t-full bg-brand-soft" aria-hidden="true" />

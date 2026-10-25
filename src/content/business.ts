@@ -6,7 +6,9 @@ export const BUSINESS = {
   whatsappHref: "https://wa.me/23055047906",
   email: "info@clinexpro.net",
   facebook: "https://www.facebook.com/clinexpro",
-  youtube: "https://www.youtube.com/@ClinexProContractingLimited",
+  youtube: "https://youtu.be/dqcwIcJlPOk",
+  // Channel page, listed for search engines alongside the video link.
+  youtubeChannel: "https://www.youtube.com/@ClinexProContractingLimited",
   hours: { en: "Mon–Sat 08:00–17:00", fr: "Lun–sam 8h00–17h00" },
   // Head office as listed on clinexpro.net.
   street: "Royal Road",

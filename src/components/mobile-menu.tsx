@@ -9,6 +9,7 @@ import { BUSINESS } from "@/content/business";
 import { Icon } from "./icons";
 import { Logo } from "./logo";
 import { LangSwitch } from "./lang-switch";
+import { SocialLinks } from "./social-links";
 
 /**
  * Full-screen phone menu. Rendered into <body> through a portal: the header's
@@ -134,8 +135,11 @@ export function MobileMenu({
                   WhatsApp
                 </a>
               </div>
-              <div className="flex justify-center pt-1" onClick={close}>
-                <LangSwitch lang={lang} label={labels.language} light className="inline-flex" />
+              <div className="flex items-center justify-between pt-1">
+                <SocialLinks />
+                <span onClick={close}>
+                  <LangSwitch lang={lang} label={labels.language} light className="inline-flex" />
+                </span>
               </div>
             </div>
           </div>,
