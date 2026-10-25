@@ -42,6 +42,7 @@ export async function generateMetadata({ params }: LayoutProps<"/[lang]">): Prom
       locale: lang === "fr" ? "fr_MU" : "en_MU",
       title: t.meta.siteTitle,
       description: t.meta.siteDescription,
+      images: [{ url: "/images/family-booking.jpg", width: 750, height: 501, alt: "Clinex Pro" }],
     },
   };
 }

@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { hasLocale, alternates } from "@/lib/i18n";
 import { getDictionary } from "@/dictionaries";
+import officeTeam from "../../../../public/images/services/office-cleaning.jpg";
+import housekeeper from "../../../../public/images/services/maid-service.jpg";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/about">): Promise<Metadata> {
   const { lang } = await params;
@@ -17,11 +20,17 @@ export default async function AboutPage({ params }: PageProps<"/[lang]/about">) 
   const t = getDictionary(lang);
   return (
     <div className="container-page space-y-12 py-12 sm:py-16">
-      <header className="max-w-3xl space-y-4">
-        <h1 className="text-4xl font-extrabold tracking-tight">{t.about.title}</h1>
-        {t.about.body.map((p) => (
-          <p key={p} className="text-lg text-ink-soft">{p}</p>
-        ))}
+      <header className="grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:items-center">
+        <div className="space-y-4">
+          <h1 className="text-4xl font-extrabold tracking-tight">{t.about.title}</h1>
+          {t.about.body.map((p) => (
+            <p key={p} className="text-lg text-ink-soft">{p}</p>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Image src={officeTeam} alt="Clinex Pro team cleaning an office" sizes="(min-width: 1024px) 260px, 50vw" className="h-full w-full rounded-2xl object-cover" />
+          <Image src={housekeeper} alt="Clinex Pro housekeeper with fresh towels" sizes="(min-width: 1024px) 260px, 50vw" className="mt-8 h-full w-full rounded-2xl object-cover" />
+        </div>
       </header>
       <section>
         <h2 className="mb-5 text-2xl font-bold">{t.about.valuesTitle}</h2>

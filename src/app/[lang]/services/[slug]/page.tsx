@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { hasLocale, alternates, LOCALES, SITE_URL } from "@/lib/i18n";
 import { getDictionary } from "@/dictionaries";
-import { SERVICES, getService } from "@/content/services";
+import { SERVICES, getService, serviceImage } from "@/content/services";
 import { TOWNS } from "@/content/towns";
 import { getPricedService, formatMur } from "@/lib/pricing";
 import { Icon } from "@/components/icons";
@@ -63,19 +64,31 @@ export default async function ServicePage({ params }: PageProps<"/[lang]/service
     <article>
       <JsonLd data={jsonLd} />
       <section className="bg-gradient-to-b from-brand-soft to-white">
-        <div className="container-page space-y-5 py-12 sm:py-16">
-          <nav className="text-sm text-ink-soft">
-            <Link href={`/${lang}/services`} className="hover:text-brand-strong">{t.nav.services}</Link> / {service.name[lang]}
-          </nav>
-          <h1 className="max-w-3xl text-4xl font-extrabold tracking-tight sm:text-5xl">{service.name[lang]}</h1>
-          <p className="max-w-2xl text-lg text-ink-soft">{service.intro[lang]}</p>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Link href={cta.href} className="btn-primary">{cta.label}</Link>
-            {priced && (
-              <span className="text-ink-soft">
-                {t.services.from} <strong className="text-ink">{formatMur(priced.minimumMur, lang)}</strong>
-              </span>
-            )}
+        <div className="container-page grid gap-8 py-10 sm:py-14 lg:grid-cols-[1.2fr_1fr] lg:items-center">
+          <div className="space-y-5">
+            <nav className="text-sm text-ink-soft">
+              <Link href={`/${lang}/services`} className="hover:text-brand-strong">{t.nav.services}</Link> / {service.name[lang]}
+            </nav>
+            <h1 className="max-w-3xl text-4xl font-extrabold tracking-tight sm:text-5xl">{service.name[lang]}</h1>
+            <p className="max-w-2xl text-lg text-ink-soft">{service.intro[lang]}</p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Link href={cta.href} className="btn-primary">{cta.label}</Link>
+              {priced && (
+                <span className="text-ink-soft">
+                  {t.services.from} <strong className="text-ink">{formatMur(priced.minimumMur, lang)}</strong>
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="relative aspect-[4/3] overflow-hidden rounded-3xl lg:aspect-[15/13]">
+            <Image
+              src={serviceImage(service.slug)}
+              alt={service.name[lang]}
+              fill
+              priority
+              sizes="(min-width: 1024px) 480px, 100vw"
+              className="object-cover"
+            />
           </div>
         </div>
       </section>

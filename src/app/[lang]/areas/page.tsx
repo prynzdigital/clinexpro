@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { hasLocale, alternates } from "@/lib/i18n";
 import { getDictionary } from "@/dictionaries";
+import mauritiusMap from "../../../../public/images/mauritius-map.png";
 import { TOWNS } from "@/content/towns";
 import { Icon } from "@/components/icons";
 
@@ -19,9 +21,18 @@ export default async function AreasPage({ params }: PageProps<"/[lang]/areas">) 
   const t = getDictionary(lang);
   return (
     <div className="container-page space-y-8 py-12 sm:py-16">
-      <header className="max-w-2xl space-y-2">
-        <h1 className="text-4xl font-extrabold tracking-tight">{t.areas.title}</h1>
-        <p className="text-lg text-ink-soft">{t.areas.subtitle}</p>
+      <header className="grid gap-6 lg:grid-cols-[1.2fr_1fr] lg:items-center">
+        <div className="max-w-2xl space-y-2">
+          <h1 className="text-4xl font-extrabold tracking-tight">{t.areas.title}</h1>
+          <p className="text-lg text-ink-soft">{t.areas.subtitle}</p>
+        </div>
+        <Image
+          src={mauritiusMap}
+          alt="Map of Mauritius showing Clinex Pro coverage across the island"
+          priority
+          sizes="(min-width: 1024px) 440px, 100vw"
+          className="mx-auto h-auto w-full max-w-sm"
+        />
       </header>
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {TOWNS.map((town) => (

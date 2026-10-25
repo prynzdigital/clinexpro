@@ -1,12 +1,14 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import type { Locale } from "@/lib/i18n";
 import type { Dictionary } from "@/dictionaries";
 import { estimate, formatMur, getPricedService, TIME_SLOTS, type Frequency } from "@/lib/pricing";
 import { track } from "@/lib/track";
-import { Icon, type IconName } from "@/components/icons";
+import type { IconName } from "@/components/icons";
+import { serviceImage } from "@/content/services";
 import { createBooking } from "./actions";
 
 type Props = {
@@ -125,11 +127,15 @@ export function BookingWizard({ lang, t, businessHref, initialService, services,
                   key={s.slug}
                   type="button"
                   onClick={() => chooseService(s.slug)}
-                  className={`card flex items-start gap-3 p-4 text-left hover:border-brand ${service === s.slug ? "border-brand ring-2 ring-brand/20" : ""}`}
+                  className={`card flex items-center gap-3 p-3 text-left hover:border-brand ${service === s.slug ? "border-brand ring-2 ring-brand/20" : ""}`}
                 >
-                  <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand-strong">
-                    <Icon name={s.icon} />
-                  </span>
+                  <Image
+                    src={serviceImage(s.slug)}
+                    alt=""
+                    width={72}
+                    height={72}
+                    className="size-[72px] shrink-0 rounded-xl object-cover"
+                  />
                   <span>
                     <span className="block font-semibold">{s.name}</span>
                     <span className="text-sm text-ink-soft">{s.tagline}</span>

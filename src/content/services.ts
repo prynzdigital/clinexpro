@@ -272,4 +272,7 @@ export const SERVICES: ServiceContent[] = [
 ];
 
 export const getService = (slug: string) => SERVICES.find((s) => s.slug === slug);
+
+/** Photo for each service, from Clinex Pro's own site (public/images/services). */
+export const serviceImage = (slug: string) => `/images/services/${slug}.jpg`;
 export const BOOKABLE_SERVICES = SERVICES.filter((s) => s.bookable);
