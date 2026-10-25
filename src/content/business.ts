@@ -8,4 +8,14 @@ export const BUSINESS = {
   facebook: "https://www.facebook.com/clinexpro",
   youtube: "https://www.youtube.com/@ClinexProContractingLimited",
   hours: "Mon–Sat 08:00–17:00",
+  // Head office as listed on clinexpro.net.
+  street: "Royal Road",
+  locality: "Grand Baie",
+  // Service regions as listed on clinexpro.net.
+  regions: [
+    "Black River & Plaines Wilhems",
+    "Rivière du Rempart & Flacq",
+    "Moka, Pamplemousses & Port Louis",
+    "Grand Port & Savanne",
+  ],
 };

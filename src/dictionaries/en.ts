@@ -43,6 +43,11 @@ const en = {
     businessBody:
       "Daily office cleaning, hotel housekeeping support and villa turnovers, with a dedicated supervisor and monthly invoicing.",
     businessCta: "Request a site visit",
+    slideShow: "Show",
+    slidePause: "Pause slideshow",
+    slidePlay: "Play slideshow",
+    siteVisit: "Free site visit",
+    reviews: "reviews",
   },
   services: {
     title: "Our cleaning services",
@@ -105,7 +110,12 @@ const en = {
   booking: {
     title: "Book a cleaning",
     subtitle: "Your price updates as you go. No payment is taken until you confirm.",
-    steps: ["Service", "Details", "Date", "Your details", "Confirm"],
+    steps: ["Service", "Date & time", "Your details"],
+    sizeTitle: "Tell us about your space",
+    morning: "Morning",
+    afternoon: "Afternoon",
+    edit: "Edit",
+    pickService: "Choose a service to see your price",
     chooseService: "Which service do you need?",
     businessHint: "Office, hotel or villa cleaning?",
     businessLink: "Request a business quote",
@@ -168,6 +178,9 @@ const en = {
   footer: {
     tagline: "Reliable, affordable and eco-friendly cleaning across Mauritius.",
     company: "Company",
+    headOffice: "Head office",
+    regions: "Service areas",
+    follow: "Follow us",
     privacy: "Privacy policy",
     rights: "All rights reserved.",
   },

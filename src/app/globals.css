@@ -7,6 +7,7 @@
   --brand-soft: #fff0ea;
   --accent: #fc511d; /* logo orange */
   --navy: #031432; /* logo navy */
+  --footer: #061e2f; /* footer blue on clinexpro.net */
   --ink: #0b2a41; /* heading navy on clinexpro.net */
   --ink-soft: #5f6670;
   --line: #e3e6ea;
@@ -21,6 +22,7 @@
   --color-brand-soft: var(--brand-soft);
   --color-accent: var(--accent);
   --color-navy: var(--navy);
+  --color-footer: var(--footer);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
   --color-line: var(--line);

@@ -63,7 +63,7 @@ export default async function LangLayout({ children, params }: LayoutProps<"/[la
     email: BUSINESS.email,
     image: `${SITE_URL}/icons/512`,
     priceRange: "MUR",
-    address: { "@type": "PostalAddress", addressCountry: "MU" },
+    address: { "@type": "PostalAddress", streetAddress: BUSINESS.street, addressLocality: BUSINESS.locality, addressCountry: "MU" },
     areaServed: TOWNS.map((town) => ({ "@type": "City", name: town.name })),
     openingHoursSpecification: {
       "@type": "OpeningHoursSpecification",

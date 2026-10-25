@@ -45,6 +45,11 @@ const fr: Dictionary = {
     businessBody:
       "Nettoyage quotidien de bureaux, renfort d'entretien hôtelier et remise en état de villas, avec un superviseur dédié et une facturation mensuelle.",
     businessCta: "Demander une visite",
+    slideShow: "Afficher",
+    slidePause: "Mettre le diaporama en pause",
+    slidePlay: "Lancer le diaporama",
+    siteVisit: "Visite gratuite",
+    reviews: "avis",
   },
   services: {
     title: "Nos services de nettoyage",
@@ -107,7 +112,12 @@ const fr: Dictionary = {
   booking: {
     title: "Réserver un nettoyage",
     subtitle: "Le prix s'actualise en direct. Aucun paiement avant votre confirmation.",
-    steps: ["Service", "Détails", "Date", "Vos infos", "Confirmer"],
+    steps: ["Service", "Date et heure", "Vos coordonnées"],
+    sizeTitle: "Parlez-nous de votre espace",
+    morning: "Matin",
+    afternoon: "Après-midi",
+    edit: "Modifier",
+    pickService: "Choisissez un service pour voir le prix",
     chooseService: "De quel service avez-vous besoin ?",
     businessHint: "Bureau, hôtel ou villa ?",
     businessLink: "Demander un devis entreprise",
@@ -170,6 +180,9 @@ const fr: Dictionary = {
   footer: {
     tagline: "Un nettoyage fiable, abordable et écologique partout à Maurice.",
     company: "Entreprise",
+    headOffice: "Siège",
+    regions: "Zones desservies",
+    follow: "Suivez-nous",
     privacy: "Politique de confidentialité",
     rights: "Tous droits réservés.",
   },

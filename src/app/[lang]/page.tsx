@@ -2,12 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { hasLocale } from "@/lib/i18n";
 import { getDictionary } from "@/dictionaries";
-import { SERVICES } from "@/content/services";
+import { SERVICES, serviceImage } from "@/content/services";
+import { getPricedService, formatMur } from "@/lib/pricing";
+import { HeroSlideshow, type Slide } from "@/components/hero-slideshow";
+import { RatingBadge } from "@/components/rating-badge";
 import { TOWNS } from "@/content/towns";
 import { ServiceCard } from "@/components/service-card";
 import { Icon, type IconName } from "@/components/icons";
 import { notFound } from "next/navigation";
-import heroCleaner from "../../../public/images/hero-cleaner.png";
 import familyBooking from "../../../public/images/family-booking.jpg";
 import officeCleaning from "../../../public/images/services/office-cleaning.jpg";
 import mauritiusMap from "../../../public/images/mauritius-map.png";
@@ -19,11 +21,21 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
   if (!hasLocale(lang)) notFound();
   const t = getDictionary(lang);
   const home = SERVICES.filter((s) => s.category === "home");
+  const slides: Slide[] = SERVICES.map((s) => {
+    const priced = getPricedService(s.slug);
+    return {
+      slug: s.slug,
+      src: serviceImage(s.slug),
+      name: s.name[lang],
+      meta: priced ? `${t.services.from} ${formatMur(priced.minimumMur, lang)}` : t.home.siteVisit,
+      href: `/${lang}/services/${s.slug}`,
+    };
+  });
 
   return (
     <>
       <section className="overflow-hidden bg-gradient-to-b from-brand-soft to-white">
-        <div className="container-page grid gap-6 pt-10 sm:pt-16 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:gap-10 lg:pt-12">
+        <div className="container-page grid gap-8 py-10 sm:py-14 lg:grid-cols-[1fr_1.05fr] lg:items-center lg:gap-12 lg:pb-0 lg:pt-12">
           <div className="space-y-6 lg:pb-16">
             <p className="eyebrow">{t.home.eyebrow}</p>
             <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-balance sm:text-5xl lg:text-6xl">
@@ -39,6 +51,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
                 {t.home.ctaBusiness}
               </Link>
             </div>
+            <RatingBadge label={t.home.reviews} />
             <ul className="grid grid-cols-2 gap-x-4 gap-y-3 pt-2 text-sm font-semibold">
               {t.home.trust.map((item, i) => (
                 <li key={item} className="flex items-center gap-2">
@@ -50,16 +63,14 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
               ))}
             </ul>
           </div>
-          <div className="relative mx-auto w-full max-w-[300px] self-end sm:max-w-[360px] lg:max-w-[440px]">
-            <div className="absolute inset-x-0 bottom-0 top-[18%] rounded-t-full bg-navy" aria-hidden="true" />
-            <div className="absolute -right-2 top-[14%] size-16 rounded-full bg-accent sm:size-20" aria-hidden="true" />
-            <Image
-              src={heroCleaner}
-              alt="Smiling Clinex Pro cleaner putting on gloves"
-              priority
-              sizes="(min-width: 1024px) 440px, (min-width: 640px) 360px, 300px"
-              className="relative h-auto w-full"
-            />
+          <div className="relative lg:pb-16">
+            <div className="absolute -right-3 -top-3 size-20 rounded-full bg-accent/90 sm:size-24" aria-hidden="true" />
+            <div className="relative">
+              <HeroSlideshow
+                slides={slides}
+                labels={{ show: t.home.slideShow, pause: t.home.slidePause, play: t.home.slidePlay }}
+              />
+            </div>
           </div>
         </div>
       </section>

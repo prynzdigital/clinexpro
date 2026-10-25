@@ -40,7 +40,7 @@ export default async function ConfirmationPage({ params, searchParams }: PagePro
       <section className="card divide-y divide-line">
         <h2 className="p-4 font-semibold">{t.confirmation.summary}</h2>
         <p className="flex justify-between p-4"><span className="text-ink-soft">{t.booking.steps[0]}</span><span>{getService(booking.service)?.name[lang]} · {t.booking.frequency[booking.frequency]}</span></p>
-        <p className="flex justify-between p-4"><span className="text-ink-soft">{t.booking.steps[2]}</span><span className="first-letter:uppercase">{new Intl.DateTimeFormat(lang === "fr" ? "fr-MU" : "en-MU", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${booking.date}T00:00:00Z`))} · {booking.timeSlot}</span></p>
+        <p className="flex justify-between p-4"><span className="text-ink-soft">{t.booking.steps[1]}</span><span className="first-letter:uppercase">{new Intl.DateTimeFormat(lang === "fr" ? "fr-MU" : "en-MU", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${booking.date}T00:00:00Z`))} · {booking.timeSlot}</span></p>
         <p className="flex justify-between p-4"><span className="text-ink-soft">{t.booking.town}</span><span>{getTown(booking.town)?.name}</span></p>
         <p className="flex justify-between p-4"><span className="text-ink-soft">{t.booking.total}</span><strong>{formatMur(booking.estimateMur, lang)}</strong></p>
         <p className="flex justify-between p-4"><span className="text-ink-soft">{t.booking.deposit}</span><strong className="text-brand-strong">{formatMur(booking.depositMur, lang)}</strong></p>

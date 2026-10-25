@@ -31,7 +31,7 @@ export default async function BookPage({ params, searchParams }: PageProps<"/[la
         t={t.booking}
         businessHref={`/${lang}/business`}
         initialService={initial}
-        services={BOOKABLE_SERVICES.map((s) => ({ slug: s.slug, name: s.name[lang], tagline: s.tagline[lang], icon: s.icon }))}
+        services={BOOKABLE_SERVICES.map((s) => ({ slug: s.slug, name: s.name[lang], tagline: s.tagline[lang] }))}
         towns={TOWNS.map((town) => ({ slug: town.slug, name: town.name }))}
       />
     </div>
