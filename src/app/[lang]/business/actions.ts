@@ -1,8 +1,9 @@
 "use server";
 
 import { z } from "zod";
+import { after } from "next/server";
 import { getDb, schema } from "@/db";
-import { notifyTeam } from "@/lib/notify";
+import { alertNewLead } from "@/lib/notify";
 
 const LeadInput = z.object({
   company: z.string().trim().min(2).max(160),
@@ -39,9 +40,15 @@ export async function createLead(_prev: LeadState, formData: FormData): Promise<
   const lead = parsed.data;
   const db = await getDb();
   await db.insert(schema.leads).values({ ...lead, email: lead.email.toLowerCase() });
-  await notifyTeam(`New business enquiry: ${lead.company}`, [
-    `${lead.contactName} · ${lead.phone} · ${lead.email}`,
-    `${lead.sector}${lead.town ? ` in ${lead.town}` : ""}`,
-  ]);
+  after(() =>
+    alertNewLead({
+      kind: "business",
+      company: lead.company,
+      contactName: lead.contactName,
+      email: lead.email,
+      phone: lead.phone,
+      summary: [`${lead.sector}${lead.town ? ` in ${lead.town}` : ""}`, ...(lead.message ? [lead.message] : [])],
+    }),
+  );
   return { status: "sent" };
 }

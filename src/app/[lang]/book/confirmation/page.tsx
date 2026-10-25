@@ -9,12 +9,13 @@ import { getService } from "@/content/services";
 import { getTown } from "@/content/towns";
 import { formatMur } from "@/lib/pricing";
 import { Icon } from "@/components/icons";
+import { getProvider } from "@/lib/payments";
 
 export const metadata: Metadata = { robots: { index: false } };
 
 export default async function ConfirmationPage({ params, searchParams }: PageProps<"/[lang]/book/confirmation">) {
   const { lang } = await params;
-  const { ref } = await searchParams;
+  const { ref, payment } = await searchParams;
   if (!hasLocale(lang) || typeof ref !== "string") notFound();
   const t = getDictionary(lang);
 
@@ -46,12 +47,57 @@ export default async function ConfirmationPage({ params, searchParams }: PagePro
         <p className="flex justify-between p-4"><span className="text-ink-soft">{t.booking.deposit}</span><strong className="text-brand-strong">{formatMur(booking.depositMur, lang)}</strong></p>
       </section>
 
-      <section className="card bg-surface-alt p-5">
-        <h2 className="mb-1 font-semibold">{t.confirmation.payTitle}</h2>
-        <p className="text-sm text-ink-soft">{t.confirmation.payBody}</p>
-      </section>
+      <PaymentPanel
+        t={t.confirmation}
+        lang={lang}
+        refCode={booking.ref}
+        deposit={formatMur(booking.depositMur, lang)}
+        paid={booking.paymentStatus !== "unpaid"}
+        failed={payment === "failed"}
+        online={Boolean(getProvider()) && booking.status !== "cancelled"}
+      />
 
       <Link href={`/${lang}`} className="btn-secondary">{t.confirmation.home}</Link>
     </div>
+  );
+}
+
+type PaymentPanelProps = {
+  t: ReturnType<typeof getDictionary>["confirmation"];
+  lang: string;
+  refCode: string;
+  deposit: string;
+  paid: boolean;
+  failed: boolean;
+  online: boolean;
+};
+
+function PaymentPanel({ t, lang, refCode, deposit, paid, failed, online }: PaymentPanelProps) {
+  if (paid) {
+    return (
+      <section className="card flex gap-3 border-emerald-200 bg-emerald-50 p-5" role="status">
+        <Icon name="check" width={22} height={22} className="mt-0.5 shrink-0 text-emerald-700" />
+        <div>
+          <h2 className="mb-1 font-semibold text-emerald-900">{t.paidTitle}</h2>
+          <p className="text-sm text-emerald-900">{t.paidBody}</p>
+        </div>
+      </section>
+    );
+  }
+  return (
+    <section className="card space-y-3 bg-surface-alt p-5">
+      <h2 className="font-semibold">{t.payTitle}</h2>
+      {failed && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{t.payFailed}</p>}
+      {online ? (
+        <form action="/api/payments/checkout" method="post" className="space-y-3">
+          <input type="hidden" name="ref" value={refCode} />
+          <input type="hidden" name="lang" value={lang} />
+          <p className="text-sm text-ink-soft">{t.payOnline}</p>
+          <button type="submit" className="btn-primary w-full sm:w-auto">{fill(t.payButton, { amount: deposit })}</button>
+        </form>
+      ) : (
+        <p className="text-sm text-ink-soft">{t.payBody}</p>
+      )}
+    </section>
   );
 }

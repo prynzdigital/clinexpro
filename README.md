@@ -38,12 +38,15 @@ Stop the database with Ctrl+C so it closes cleanly. Its data lives in `.data/`.
 
 ## Deploy
 
-1. Create a hosted Postgres (Supabase, Neon…) and set `DATABASE_URL`.
-2. Set `SESSION_SECRET`, `NEXT_PUBLIC_SITE_URL`, then run `npm run seed` once against it.
-3. Deploy to Vercel or any Node host (`npm run build && npm start`). Migrations run on first request.
+Step-by-step Vercel + Neon, email, WhatsApp and payment setup: see [DEPLOY.md](DEPLOY.md).
+The build runs `npm run db:migrate` before `next build`; `/api/health` reports what is connected.
+
+| Area | Where |
+| --- | --- |
+| Email / WhatsApp alerts | `src/lib/notify/` (sent with `after()`, never blocks a booking) |
+| Online deposits | `src/lib/payments/`, `src/app/api/payments/` |
 
 ## Not yet connected
 
-- Online deposit payment (gateway to be chosen)
-- WhatsApp / email notifications (`src/lib/notify.ts` only logs)
+- A live payment gateway (the test gateway and provider slot are ready)
 - Google Tag Manager / GA4 (`src/lib/track.ts` pushes funnel events once a tag is installed)

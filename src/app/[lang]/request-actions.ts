@@ -1,9 +1,10 @@
 "use server";
 
 import { z } from "zod";
+import { after } from "next/server";
 import { getDb, schema } from "@/db";
 import { getService } from "@/content/services";
-import { notifyTeam } from "@/lib/notify";
+import { alertNewLead } from "@/lib/notify";
 import { mauritiusDate } from "@/lib/dates";
 
 const RequestInput = z.object({
@@ -69,10 +70,19 @@ export async function createBookingRequest(_prev: RequestState, formData: FormDa
     source: "home-request",
   });
 
-  await notifyTeam(`New booking request: ${r.company || r.name}`, [
-    `${r.name} · ${r.phone} · ${r.email}`,
-    `${service ? getService(service)!.name.en : "Service not specified"} · ${r.address}`,
-    `Start ${r.startDate || "flexible"} · call in the ${r.contactTime}`,
-  ]);
+  after(() =>
+    alertNewLead({
+      kind: "request",
+      company: r.company || r.name,
+      contactName: r.name,
+      email: r.email,
+      phone: r.phone,
+      summary: [
+        `${service ? getService(service)!.name.en : "Service not specified"} · ${r.address}`,
+        `Start ${r.startDate || "flexible"} · call in the ${r.contactTime}`,
+        ...(r.notes ? [r.notes] : []),
+      ],
+    }),
+  );
   return { status: "sent" };
 }

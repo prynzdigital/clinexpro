@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { requireAdmin } from "@/lib/auth";
 import { getService } from "@/content/services";
@@ -24,6 +24,11 @@ export default async function BookingDetail({ params }: PageProps<"/admin/bookin
     .limit(1);
   if (!row) notFound();
   const { booking, customer } = row;
+  const payments = await db
+    .select()
+    .from(schema.payments)
+    .where(eq(schema.payments.bookingId, booking.id))
+    .orderBy(desc(schema.payments.createdAt));
   const { addons = [], ...counts } = booking.details as Record<string, number> & { addons?: string[] };
   const whatsapp = `https://wa.me/${customer.phone.replace(/\D/g, "")}`;
 
@@ -60,6 +65,25 @@ export default async function BookingDetail({ params }: PageProps<"/admin/bookin
             <a href={whatsapp} target="_blank" rel="noopener" className="btn-secondary mt-3 min-h-10 w-full text-sm">Message on WhatsApp</a>
           </section>
 
+          <section className="card p-5">
+            <h2 className="mb-2 font-semibold">Online payments</h2>
+            {payments.length ? (
+              <ul className="divide-y divide-line text-sm">
+                {payments.map((p) => (
+                  <li key={p.id} className="flex items-center justify-between gap-3 py-2">
+                    <span>
+                      {mur(p.amountMur)} · {p.provider}
+                      <span className="block text-xs text-ink-soft">{shortDate(p.createdAt)}{p.providerRef ? ` · ${p.providerRef}` : ""}</span>
+                    </span>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${ATTEMPT_TONE[p.status]}`}>{label(p.status)}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-ink-soft">No online payment yet.</p>
+            )}
+          </section>
+
           <form action={updateBooking} className="card space-y-4 p-5">
             <h2 className="font-semibold">Update</h2>
             <input type="hidden" name="id" value={booking.id} />
@@ -82,6 +106,13 @@ export default async function BookingDetail({ params }: PageProps<"/admin/bookin
     </>
   );
 }
+
+const ATTEMPT_TONE: Record<(typeof schema.paymentAttemptStatus.enumValues)[number], string> = {
+  pending: "bg-amber-100 text-amber-800",
+  succeeded: "bg-emerald-100 text-emerald-800",
+  failed: "bg-red-100 text-red-800",
+  cancelled: "bg-slate-100 text-slate-700",
+};
 
 function Item({ label, value }: { label: string; value: string }) {
   return (

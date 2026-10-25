@@ -7,6 +7,7 @@ import {
   text,
   timestamp,
   date,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 export const bookingStatus = pgEnum("booking_status", [
@@ -28,6 +29,14 @@ export const frequency = pgEnum("frequency", [
   "weekly",
   "fortnightly",
   "monthly",
+]);
+
+// One online payment attempt; a booking can have several (a declined card, then a retry).
+export const paymentAttemptStatus = pgEnum("payment_attempt_status", [
+  "pending",
+  "succeeded",
+  "failed",
+  "cancelled",
 ]);
 
 export const leadStatus = pgEnum("lead_status", [
@@ -92,6 +101,26 @@ export const leads = pgTable("leads", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const payments = pgTable(
+  "payments",
+  {
+    id: serial("id").primaryKey(),
+    bookingId: integer("booking_id")
+      .notNull()
+      .references(() => bookings.id),
+    provider: text("provider").notNull(),
+    // The gateway's own transaction id, known once the customer reaches it.
+    providerRef: text("provider_ref"),
+    kind: text("kind").notNull().default("deposit"),
+    amountMur: integer("amount_mur").notNull(),
+    status: paymentAttemptStatus("status").notNull().default("pending"),
+    raw: jsonb("raw").$type<Record<string, unknown>>(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("payments_provider_ref_idx").on(t.provider, t.providerRef)],
+);
+
 export const adminUsers = pgTable("admin_users", {
   id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
@@ -104,3 +133,4 @@ export const adminUsers = pgTable("admin_users", {
 export type Customer = typeof customers.$inferSelect;
 export type Booking = typeof bookings.$inferSelect;
 export type Lead = typeof leads.$inferSelect;
+export type Payment = typeof payments.$inferSelect;

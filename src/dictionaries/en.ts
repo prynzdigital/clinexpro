@@ -287,6 +287,11 @@ const en = {
     summary: "Summary",
     payTitle: "Pay your deposit",
     payBody: "Online deposit payment is coming soon. For now, our team will send you a secure payment link with your confirmation.",
+    payOnline: "Pay the deposit now to lock in your date. You will be taken to our secure payment page.",
+    payButton: "Pay {amount} deposit",
+    paidTitle: "Deposit received",
+    paidBody: "Thank you, your deposit is paid. Your date is held and we will be in touch to confirm the details.",
+    payFailed: "The payment did not go through and you have not been charged. You can try again, or our team will send you a payment link.",
     home: "Back to home",
   },
   cta: {

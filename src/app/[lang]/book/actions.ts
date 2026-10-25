@@ -2,15 +2,16 @@
 
 import { z } from "zod";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { getDb, schema } from "@/db";
 import { estimate, TIME_SLOTS } from "@/lib/pricing";
 import { getTown } from "@/content/towns";
 import { getService } from "@/content/services";
-import { hasLocale } from "@/lib/i18n";
-import { notifyTeam } from "@/lib/notify";
+import { LOCALES } from "@/lib/i18n";
+import { alertNewBooking } from "@/lib/notify";
 
 const BookingInput = z.object({
-  lang: z.string().refine(hasLocale),
+  lang: z.enum(LOCALES),
   service: z.string(),
   values: z.record(z.string(), z.number().int()),
   addons: z.array(z.string()).max(10),
@@ -68,7 +69,7 @@ export async function createBooking(raw: BookingInput): Promise<BookingResult> {
     .returning();
 
   const ref = bookingRef();
-  await db.insert(schema.bookings).values({
+  const [booking] = await db.insert(schema.bookings).values({
     ref,
     customerId: customer.id,
     service: service.slug,
@@ -81,13 +82,27 @@ export async function createBooking(raw: BookingInput): Promise<BookingResult> {
     notes: input.notes || null,
     estimateMur: price.totalMur,
     depositMur: price.depositMur,
-  });
+  }).returning({ id: schema.bookings.id });
 
-  await notifyTeam(`New booking ${ref}`, [
-    `${service.name.en} on ${input.date} at ${input.timeSlot} in ${town.name}`,
-    `${input.name} · ${input.phone} · ${email}`,
-    `Estimate MUR ${price.totalMur} (deposit ${price.depositMur})`,
-  ]);
+  // Sent after the response, so the visitor reaches the confirmation page at once.
+  after(() =>
+    alertNewBooking({
+      id: booking.id,
+      ref,
+      lang: input.lang,
+      service: service.name,
+      date: input.date,
+      timeSlot: input.timeSlot,
+      town: town.name,
+      address: input.address,
+      name: input.name,
+      email,
+      phone: input.phone,
+      notes: input.notes,
+      totalMur: price.totalMur,
+      depositMur: price.depositMur,
+    }),
+  );
 
   redirect(`/${input.lang}/book/confirmation?ref=${ref}`);
 }

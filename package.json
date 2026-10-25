@@ -10,7 +10,8 @@
     "seed": "node --env-file=.env.local --import tsx scripts/seed.ts",
     "db:generate": "drizzle-kit generate",
     "typecheck": "tsc --noEmit",
-    "db": "node scripts/dev-db.mjs"
+    "db": "node scripts/dev-db.mjs",
+    "db:migrate": "tsx scripts/migrate.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

@@ -5,13 +5,29 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
 import * as schema from "./schema";
 
-// Production: a hosted Postgres. Development: `npm run db` (see scripts/dev-db.mjs).
-const DATABASE_URL = process.env.DATABASE_URL ?? "postgres://postgres@127.0.0.1:54329/postgres";
+const LOCAL_DATABASE_URL = "postgres://postgres@127.0.0.1:54329/postgres";
+const isProduction = process.env.NODE_ENV === "production";
+
+function databaseUrl() {
+  const url = process.env.DATABASE_URL;
+  if (url) return url;
+  if (isProduction && process.env.ALLOW_LOCAL_DATABASE !== "1") {
+    throw new Error(
+      "DATABASE_URL is not set. Add your Postgres connection string in the hosting environment variables (see DEPLOY.md).",
+    );
+  }
+  return LOCAL_DATABASE_URL; // `npm run db` (scripts/dev-db.mjs)
+}
 
 function create() {
-  const pool = new Pool({ connectionString: DATABASE_URL, max: 5 });
+  // Small pool: on serverless hosting each instance holds its own connections.
+  const pool = new Pool({ connectionString: databaseUrl(), max: isProduction ? 3 : 5 });
   const db = drizzle(pool, { schema });
-  const ready = migrate(db, { migrationsFolder: path.join(process.cwd(), "drizzle") });
+  // Production runs migrations once per deploy (`npm run db:migrate` in the build
+  // command); development applies them automatically on first use.
+  const ready = isProduction
+    ? Promise.resolve()
+    : migrate(db, { migrationsFolder: path.join(process.cwd(), "drizzle") });
   return { db, ready };
 }
 

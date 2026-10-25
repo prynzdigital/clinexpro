@@ -289,6 +289,11 @@ const fr: Dictionary = {
     summary: "Récapitulatif",
     payTitle: "Régler l'acompte",
     payBody: "Le paiement en ligne arrive bientôt. En attendant, notre équipe vous envoie un lien de paiement sécurisé avec la confirmation.",
+    payOnline: "Réglez l'acompte maintenant pour réserver votre date. Vous serez redirigé vers notre page de paiement sécurisée.",
+    payButton: "Payer l'acompte de {amount}",
+    paidTitle: "Acompte reçu",
+    paidBody: "Merci, votre acompte est réglé. Votre date est réservée et nous vous contacterons pour confirmer les détails.",
+    payFailed: "Le paiement n'a pas abouti et vous n'avez pas été débité. Vous pouvez réessayer, ou notre équipe vous enverra un lien de paiement.",
     home: "Retour à l'accueil",
   },
   cta: {
