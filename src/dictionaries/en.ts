@@ -278,6 +278,12 @@ const en = {
     payBody: "Online deposit payment is coming soon. For now, our team will send you a secure payment link with your confirmation.",
     home: "Back to home",
   },
+  cta: {
+    title: "Ready for a cleaner, fresher space?",
+    body: "Get an instant price and book in two minutes, or talk to our team about a custom plan.",
+    button: "Get my price",
+    call: "Or call",
+  },
   footer: {
     tagline: "Reliable, affordable and eco-friendly cleaning across Mauritius.",
     company: "Company",

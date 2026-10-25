@@ -280,6 +280,12 @@ const fr: Dictionary = {
     payBody: "Le paiement en ligne arrive bientôt. En attendant, notre équipe vous envoie un lien de paiement sécurisé avec la confirmation.",
     home: "Retour à l'accueil",
   },
+  cta: {
+    title: "Prêt pour un espace plus propre et plus frais ?",
+    body: "Obtenez un prix immédiat et réservez en deux minutes, ou parlez à notre équipe d'un plan sur mesure.",
+    button: "Voir mon prix",
+    call: "Ou appelez le",
+  },
   footer: {
     tagline: "Un nettoyage fiable, abordable et écologique partout à Maurice.",
     company: "Entreprise",
