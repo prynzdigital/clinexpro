@@ -5,6 +5,7 @@ import { getDictionary } from "@/dictionaries";
 import { BOOKABLE_SERVICES } from "@/content/services";
 import { TOWNS } from "@/content/towns";
 import { BookingWizard } from "./booking-wizard";
+import { PageHeader } from "@/components/page-header";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/book">): Promise<Metadata> {
   const { lang } = await params;
@@ -21,19 +22,23 @@ export default async function BookPage({ params, searchParams }: PageProps<"/[la
   const initial = BOOKABLE_SERVICES.find((s) => s.slug === service)?.slug;
 
   return (
-    <div className="container-page py-8 sm:py-12">
-      <header className="mb-6 max-w-2xl space-y-1">
-        <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">{t.booking.title}</h1>
-        <p className="text-ink-soft">{t.booking.subtitle}</p>
-      </header>
-      <BookingWizard
-        lang={lang}
-        t={t.booking}
-        businessHref={`/${lang}/business`}
-        initialService={initial}
-        services={BOOKABLE_SERVICES.map((s) => ({ slug: s.slug, name: s.name[lang], tagline: s.tagline[lang] }))}
-        towns={TOWNS.map((town) => ({ slug: town.slug, name: town.name }))}
+    <>
+      <PageHeader
+        crumbs={[{ label: t.nav.home, href: `/${lang}` }, { label: t.nav.book }]}
+        eyebrow={t.booking.eyebrow}
+        title={t.booking.title}
+        intro={t.booking.subtitle}
       />
-    </div>
+      <div className="container-page py-8 sm:py-12">
+        <BookingWizard
+          lang={lang}
+          t={t.booking}
+          businessHref={`/${lang}/business`}
+          initialService={initial}
+          services={BOOKABLE_SERVICES.map((s) => ({ slug: s.slug, name: s.name[lang], tagline: s.tagline[lang] }))}
+          towns={TOWNS.map((town) => ({ slug: town.slug, name: town.name }))}
+        />
+      </div>
+    </>
   );
 }

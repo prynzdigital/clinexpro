@@ -13,6 +13,7 @@ const fr: Dictionary = {
     about: "À propos",
     contact: "Contact",
     book: "Réserver",
+    home: "Accueil",
     call: "Appeler",
     menu: "Menu",
     close: "Fermer",
@@ -214,6 +215,7 @@ const fr: Dictionary = {
     sent: "Merci — nous vous contactons sous un jour ouvré pour organiser la visite.",
   },
   booking: {
+    eyebrow: "Réservation en ligne",
     title: "Réserver un nettoyage",
     subtitle: "Le prix s'actualise en direct. Aucun paiement avant votre confirmation.",
     steps: ["Service", "Date et heure", "Vos coordonnées"],
@@ -306,6 +308,7 @@ const fr: Dictionary = {
   },
   privacy: {
     title: "Politique de confidentialité",
+    eyebrow: "Informations légales",
     updated: "Dernière mise à jour :",
     contents: "Sommaire",
   },

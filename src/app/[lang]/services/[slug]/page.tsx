@@ -9,6 +9,7 @@ import { TOWNS } from "@/content/towns";
 import { getPricedService, formatMur } from "@/lib/pricing";
 import { Icon } from "@/components/icons";
 import { JsonLd } from "@/components/json-ld";
+import { PageHeader } from "@/components/page-header";
 
 export const dynamicParams = false;
 export function generateStaticParams() {
@@ -63,38 +64,33 @@ export default async function ServicePage({ params }: PageProps<"/[lang]/service
   return (
     <article>
       <JsonLd data={jsonLd} />
-      <section className="bg-gradient-to-b from-brand-soft to-white">
-        <div className="container-page grid gap-8 py-10 sm:py-14 lg:grid-cols-[1.2fr_1fr] lg:items-center">
-          <div className="space-y-5">
-            <nav className="text-sm text-ink-soft">
-              <Link href={`/${lang}/services`} className="hover:text-brand-strong">{t.nav.services}</Link> / {service.name[lang]}
-            </nav>
-            <h1 className="max-w-3xl text-4xl font-extrabold tracking-tight sm:text-5xl">{service.name[lang]}</h1>
-            <p className="max-w-2xl text-lg text-ink-soft">{service.intro[lang]}</p>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Link href={cta.href} className="btn-primary">{cta.label}</Link>
-              {priced && (
-                <span className="text-ink-soft">
-                  {t.services.from} <strong className="text-ink">{formatMur(priced.minimumMur, lang)}</strong>
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="relative aspect-[4/3] overflow-hidden rounded-3xl lg:aspect-[15/13]">
+      <PageHeader
+        crumbs={[{ label: t.nav.home, href: `/${lang}` }, { label: t.nav.services, href: `/${lang}/services` }, { label: service.name[lang] }]}
+        eyebrow={service.category === "business" ? t.nav.business : t.nav.services}
+        title={service.name[lang]}
+        intro={service.intro[lang]}
+      >
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
+          <Link href={cta.href} className="btn-glow">{cta.label}</Link>
+          {priced && (
+            <span className="text-ink-soft">
+              {t.services.from} <strong className="text-ink">{formatMur(priced.minimumMur, lang)}</strong>
+            </span>
+          )}
+        </div>
+      </PageHeader>
+
+      <div className="container-page grid gap-10 py-12 lg:grid-cols-2">
+        <section>
+          <div className="relative mb-8 aspect-[16/10] overflow-hidden rounded-3xl">
             <Image
               src={serviceImage(service.slug)}
               alt={service.name[lang]}
               fill
-              priority
-              sizes="(min-width: 1024px) 480px, 100vw"
+              sizes="(min-width: 1024px) 560px, 100vw"
               className="object-cover"
             />
           </div>
-        </div>
-      </section>
-
-      <div className="container-page grid gap-10 py-12 lg:grid-cols-2">
-        <section>
           <h2 className="mb-4 text-2xl font-bold">{t.services.included}</h2>
           <ul className="space-y-3">
             {service.includes[lang].map((item) => (

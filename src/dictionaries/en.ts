@@ -11,6 +11,7 @@ const en = {
     about: "About",
     contact: "Contact",
     book: "Book now",
+    home: "Home",
     call: "Call us",
     menu: "Menu",
     close: "Close",
@@ -212,6 +213,7 @@ const en = {
     sent: "Thank you — we'll contact you within one working day to arrange your visit.",
   },
   booking: {
+    eyebrow: "Online booking",
     title: "Book a cleaning",
     subtitle: "Your price updates as you go. No payment is taken until you confirm.",
     steps: ["Service", "Date & time", "Your details"],
@@ -304,6 +306,7 @@ const en = {
   },
   privacy: {
     title: "Privacy policy",
+    eyebrow: "Legal",
     updated: "Last updated:",
     contents: "Contents",
   },
