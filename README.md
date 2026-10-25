@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Clinex Pro — website, booking and admin (Phase 1)
 
-## Getting Started
+Mobile-first booking site for Clinex Pro Contracting Ltd (Mauritius), with an
+installable PWA, English/French SEO pages, an instant-quote booking flow and an
+admin dashboard for bookings, customers and business leads.
 
-First, run the development server:
+Stack: Next.js 16 (App Router), Tailwind CSS 4, Drizzle ORM, Postgres.
+
+## Run locally
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # then fill SESSION_SECRET and ADMIN_* values
+npm run db                   # terminal 1: local Postgres (PGlite) on port 54329
+npm run seed -- --demo       # once: admin user + sample data
+npm run dev                  # terminal 2: http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Admin: http://localhost:3000/admin (credentials from `.env.local`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Stop the database with Ctrl+C so it closes cleanly. Its data lives in `.data/`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Where things are
 
-## Learn More
+| Area | Path |
+| --- | --- |
+| Prices and booking rules (placeholder MUR figures) | `src/lib/pricing.ts` |
+| Service copy (EN/FR) | `src/content/services.ts` |
+| Towns served | `src/content/towns.ts` |
+| UI text (EN/FR) | `src/dictionaries/` |
+| Brand colours (from the Clinex Pro logo) | `src/app/globals.css` (`:root` tokens) |
+| Logo and icons (from clinexpro.net) | `public/brand/` |
+| Database schema / migrations | `src/db/schema.ts`, `drizzle/` (`npm run db:generate`) |
+| Public pages | `src/app/[lang]/` |
+| Admin | `src/app/admin/` |
+| PWA | `src/app/manifest.ts`, `public/sw.js`, `src/components/pwa.tsx` |
+| Old WordPress URL redirects | `next.config.ts` |
 
-To learn more about Next.js, take a look at the following resources:
+## Deploy
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Create a hosted Postgres (Supabase, Neon…) and set `DATABASE_URL`.
+2. Set `SESSION_SECRET`, `NEXT_PUBLIC_SITE_URL`, then run `npm run seed` once against it.
+3. Deploy to Vercel or any Node host (`npm run build && npm start`). Migrations run on first request.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Not yet connected
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Online deposit payment (gateway to be chosen)
+- WhatsApp / email notifications (`src/lib/notify.ts` only logs)
+- Google Tag Manager / GA4 (`src/lib/track.ts` pushes funnel events once a tag is installed)
