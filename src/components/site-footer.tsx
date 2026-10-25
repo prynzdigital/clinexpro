@@ -21,11 +21,11 @@ export function SiteFooter({ lang, t }: { lang: Locale; t: Dictionary }) {
     <>
       {/* Call-to-action card straddling the page / footer edge: it takes its
           own space in the page, and the footer slides up beneath its lower half. */}
-      <div className="container-page relative z-10 mt-16 -mb-28 sm:mt-20 sm:-mb-32">
+      <div className="container-page relative z-10 mt-16 -mb-24 sm:mt-20 lg:mt-32">
         <CtaCard lang={lang} t={t.cta} />
       </div>
       <footer className="mt-auto bg-footer text-sm text-white">
-        <div className="container-page grid gap-10 pb-14 pt-40 sm:grid-cols-2 sm:pt-44 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
+        <div className="container-page grid gap-10 pb-14 pt-36 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
           <div className="space-y-5">
             <Image src="/brand/clinexpro-logo-light.png" alt="Clinex Pro" width={1920} height={396} sizes="190px" className="h-9 w-auto" />
             <p className="max-w-xs text-white/75">{t.footer.tagline}</p>
