@@ -22,7 +22,6 @@ import videoPoster from "../../../public/images/services/deep-cleaning.jpg";
 import requestBackground from "../../../public/images/hero-commercial.jpg";
 import howBackground from "../../../public/images/services/home-cleaning.jpg";
 import officeCleaning from "../../../public/images/services/office-cleaning.jpg";
-import mauritiusMap from "../../../public/images/mauritius-map.png";
 
 const TRUST_ICONS: IconName[] = ["leaf", "shield", "calendar", "star"];
 
@@ -197,46 +196,40 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           </Reveal>
         </div>
 
-        <Reveal delay={100} className="mt-16 sm:mt-20">
-          <div className="grid items-center gap-8 rounded-[1.75rem] bg-surface-alt p-6 sm:p-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-12">
-            <Image
-              src={mauritiusMap}
-              alt="Map of Mauritius showing Clinex Pro coverage across the island"
-              sizes="(min-width: 1024px) 460px, 100vw"
-              className="mx-auto h-auto w-full max-w-sm lg:max-w-md"
-            />
+        <Reveal delay={100} className="mt-16 border-t border-line pt-12 sm:mt-20 sm:pt-14">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h3 className="text-2xl font-bold tracking-tight sm:text-3xl">{t.home.areasTitle}</h3>
               <p className="mt-2 text-ink-soft">{t.home.areasIntro}</p>
-              <ul className="mt-5 grid gap-2 text-sm font-semibold sm:grid-cols-2">
-                {BUSINESS.regions.map((region) => (
-                  <li key={region} className="flex items-start gap-2">
-                    <Icon name="pin" width={16} height={16} className="mt-0.5 shrink-0 text-brand-strong" />
-                    {region}
-                  </li>
-                ))}
-              </ul>
-              <ul className="mt-6 flex flex-wrap gap-2">
-                {TOWNS.map((town) => (
-                  <li key={town.slug}>
-                    <Link
-                      href={`/${lang}/areas/${town.slug}`}
-                      className="inline-flex rounded-full border border-line bg-white px-3.5 py-1.5 text-sm font-medium hover:border-brand hover:text-brand-strong"
-                    >
-                      {town.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href={`/${lang}/areas`}
-                className="group mt-6 inline-flex items-center gap-2 border-b border-ink/40 pb-0.5 text-sm font-semibold hover:border-brand hover:text-brand-strong"
-              >
-                {t.home.areasCta}
-                <Icon name="arrow" width={16} height={16} className="text-brand transition group-hover:translate-x-0.5" />
-              </Link>
             </div>
+            <Link
+              href={`/${lang}/areas`}
+              className="group inline-flex shrink-0 items-center gap-2 self-start border-b border-ink/40 pb-0.5 text-sm font-semibold hover:border-brand hover:text-brand-strong sm:self-auto"
+            >
+              {t.home.areasCta}
+              <Icon name="arrow" width={16} height={16} className="text-brand transition group-hover:translate-x-0.5" />
+            </Link>
           </div>
+          <ul className="mt-7 grid gap-3 text-sm font-semibold sm:grid-cols-2 lg:grid-cols-4">
+            {BUSINESS.regions.map((region) => (
+              <li key={region} className="flex items-start gap-2">
+                <Icon name="pin" width={16} height={16} className="mt-0.5 shrink-0 text-brand-strong" />
+                {region}
+              </li>
+            ))}
+          </ul>
+          <ul className="mt-6 flex flex-wrap gap-2">
+            {TOWNS.map((town) => (
+              <li key={town.slug}>
+                <Link
+                  href={`/${lang}/areas/${town.slug}`}
+                  className="inline-flex rounded-full border border-line bg-white px-4 py-2 text-sm font-medium hover:border-brand hover:text-brand-strong"
+                >
+                  {town.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </Reveal>
       </section>
 
