@@ -8,6 +8,7 @@ import { HeroSlider, type HeroSlide } from "@/components/hero-slider";
 import { RatingBadge } from "@/components/rating-badge";
 import { Reveal } from "@/components/reveal";
 import { PromoFlipCard } from "@/components/promo-flip-card";
+import { Testimonials } from "@/components/testimonials";
 import { VideoCard } from "@/components/video-card";
 import { RequestForm } from "@/components/request-form";
 import { BUSINESS } from "@/content/business";
@@ -232,6 +233,8 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           </ul>
         </Reveal>
       </section>
+
+      <Testimonials lang={lang} eyebrow={t.home.testimonialsEyebrow} title={t.home.testimonialsTitle} />
 
       {/* Booking request: dark glass info card + light glass form over a blurred photo. */}
       <section id="request" className="relative isolate overflow-hidden py-20 sm:py-24">

@@ -17,6 +17,7 @@ import { track } from "@/lib/track";
 import { serviceImage } from "@/content/services";
 import { Icon } from "@/components/icons";
 import { createBooking } from "./actions";
+import { Req, RequiredNote } from "@/components/required-mark";
 
 type Props = {
   lang: Locale;
@@ -354,14 +355,15 @@ export function BookingWizard({ lang, t, businessHref, initialService, services,
               </button>
             </div>
 
+            <RequiredNote text={t.requiredNote} />
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label={t.name} value={contact.name} autoComplete="name" onChange={(v) => setContact({ ...contact, name: v })} className="sm:col-span-2" />
-              <Field label={t.phone} type="tel" value={contact.phone} autoComplete="tel" onChange={(v) => setContact({ ...contact, phone: v })} />
-              <Field label={t.email} type="email" value={contact.email} autoComplete="email" onChange={(v) => setContact({ ...contact, email: v })} />
-              <Field label={t.address} value={contact.address} autoComplete="street-address" onChange={(v) => setContact({ ...contact, address: v })} />
+              <Field required label={t.name} value={contact.name} autoComplete="name" onChange={(v) => setContact({ ...contact, name: v })} className="sm:col-span-2" />
+              <Field required label={t.phone} type="tel" value={contact.phone} autoComplete="tel" onChange={(v) => setContact({ ...contact, phone: v })} />
+              <Field required label={t.email} type="email" value={contact.email} autoComplete="email" onChange={(v) => setContact({ ...contact, email: v })} />
+              <Field required label={t.address} value={contact.address} autoComplete="street-address" onChange={(v) => setContact({ ...contact, address: v })} />
               <label>
-                <span className="label">{t.town}</span>
-                <select className="field" value={contact.town} onChange={(e) => setContact({ ...contact, town: e.target.value })}>
+                <span className="label">{t.town}<Req /></span>
+                <select required className="field" value={contact.town} onChange={(e) => setContact({ ...contact, town: e.target.value })}>
                   <option value="">{t.chooseTown}</option>
                   {towns.map((town) => (
                     <option key={town.slug} value={town.slug}>{town.name}</option>
@@ -373,8 +375,8 @@ export function BookingWizard({ lang, t, businessHref, initialService, services,
                 <textarea className="field" rows={2} value={contact.notes} onChange={(e) => setContact({ ...contact, notes: e.target.value })} />
               </label>
               <label className="flex items-start gap-3 text-sm sm:col-span-2">
-                <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 size-5 accent-[var(--brand)]" />
-                {t.consent}
+                <input type="checkbox" required checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 size-5 accent-[var(--brand)]" />
+                <span>{t.consent}<Req /></span>
               </label>
             </div>
           </section>
@@ -442,11 +444,14 @@ function Stepper({ label, value, min, max, step, onChange }: { label: string; va
   );
 }
 
-function Field({ label, value, onChange, type = "text", autoComplete, className = "" }: { label: string; value: string; onChange: (v: string) => void; type?: string; autoComplete?: string; className?: string }) {
+function Field({ label, value, onChange, type = "text", autoComplete, required = false, className = "" }: { label: string; value: string; onChange: (v: string) => void; type?: string; autoComplete?: string; required?: boolean; className?: string }) {
   return (
     <label className={className}>
-      <span className="label">{label}</span>
-      <input className="field" type={type} value={value} autoComplete={autoComplete} onChange={(e) => onChange(e.target.value)} />
+      <span className="label">
+        {label}
+        {required && <Req />}
+      </span>
+      <input className="field" type={type} value={value} required={required} autoComplete={autoComplete} onChange={(e) => onChange(e.target.value)} />
     </label>
   );
 }

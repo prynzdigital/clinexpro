@@ -26,7 +26,7 @@ export function PageHeader({
   return (
     <section className="relative -mt-20 overflow-hidden bg-[#f6f0e8]">
       <div aria-hidden="true" className="absolute inset-y-0 right-0 w-full lg:w-[64%]">
-        <Image src={headerPhoto} alt="" fill priority sizes="(min-width: 1024px) 64vw, 100vw" className="object-cover" />
+        <Image src={headerPhoto} alt="" fill loading="eager" fetchPriority="high" sizes="(min-width: 1024px) 64vw, 100vw" className="object-cover" />
         <div className="absolute inset-0 bg-[#f6f0e8]/80 lg:hidden" />
         <div className="absolute inset-0 hidden bg-gradient-to-r from-[#f6f0e8] via-[#f6f0e8]/75 to-transparent lg:block" />
         <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#f6f0e8]/70 to-transparent" />

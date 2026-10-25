@@ -116,6 +116,23 @@ export default async function ServicePage({ params }: PageProps<"/[lang]/service
         </section>
       </div>
 
+      {service.rooms && (
+        <section className="container-page pb-14">
+          <h2 className="mb-5 text-2xl font-bold">{t.services.rooms}</h2>
+          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {service.rooms.map((room) => (
+              <li key={room.title.en} className="card p-6">
+                <span className="mb-4 grid size-11 place-items-center rounded-xl bg-brand-soft text-brand-strong">
+                  <Icon name={room.icon} width={22} height={22} />
+                </span>
+                <h3 className="mb-1 text-lg font-semibold">{room.title[lang]}</h3>
+                <p className="text-ink-soft">{room.body[lang]}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className="container-page pb-14">
         <h2 className="mb-4 text-xl font-bold">{t.areas.title}</h2>
         <ul className="flex flex-wrap gap-2 text-sm">

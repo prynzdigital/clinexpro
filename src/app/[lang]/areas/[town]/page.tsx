@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/areas/[tow
   const t = getDictionary(lang);
   return {
     title: fill(t.areas.inTown, { town: town.name }),
-    description: fill(t.areas.townIntro, { town: town.name, region: town.region[lang] }),
+    description: fill(t.areas.townIntro, { town: town.name, region: town.region }),
     alternates: alternates(lang, `/areas/${slug}`),
   };
 }
@@ -30,7 +30,7 @@ export default async function TownPage({ params }: PageProps<"/[lang]/areas/[tow
   const town = getTown(slug);
   if (!hasLocale(lang) || !town) notFound();
   const t = getDictionary(lang);
-  const nearby = TOWNS.filter((x) => x.slug !== town.slug && x.region.en === town.region.en);
+  const nearby = TOWNS.filter((x) => x.slug !== town.slug && x.region === town.region);
 
   return (
     <>
@@ -38,7 +38,7 @@ export default async function TownPage({ params }: PageProps<"/[lang]/areas/[tow
         crumbs={[{ label: t.nav.home, href: `/${lang}` }, { label: t.nav.areas, href: `/${lang}/areas` }, { label: town.name }]}
         eyebrow={t.nav.areas}
         title={fill(t.areas.inTown, { town: town.name })}
-        intro={fill(t.areas.townIntro, { town: town.name, region: town.region[lang] })}
+        intro={fill(t.areas.townIntro, { town: town.name, region: town.region })}
       >
         <Link href={`/${lang}/book`} className="btn-glow">{t.home.ctaBook}</Link>
       </PageHeader>

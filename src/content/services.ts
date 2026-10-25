@@ -11,6 +11,8 @@ export type ServiceContent = {
   intro: Localized;
   includes: Localized<string[]>;
   faq: Localized<{ q: string; a: string }[]>;
+  /** Room-by-room breakdown (from clinexpro.net), shown on the service page. */
+  rooms?: { icon: "home" | "sparkle" | "sofa" | "water" | "person"; title: Localized; body: Localized }[];
 };
 
 export const SERVICES: ServiceContent[] = [
@@ -54,6 +56,56 @@ export const SERVICES: ServiceContent[] = [
         { q: "Apportez-vous les produits et le matériel ?", a: "Oui. Notre équipe arrive avec des produits écologiques et du matériel professionnel." },
       ],
     },
+    rooms: [
+      {
+        icon: "sparkle",
+        title: { en: "Kitchen", fr: "Cuisine" },
+        body: {
+          en: "We sanitise surfaces, clean appliances, degrease stovetops and wipe down cabinets, leaving your kitchen spotless and sparkling.",
+          fr: "Nous désinfectons les surfaces, nettoyons les appareils, dégraissons les plaques et essuyons les placards pour une cuisine impeccable.",
+        },
+      },
+      {
+        icon: "water",
+        title: { en: "Bathroom", fr: "Salle de bain" },
+        body: {
+          en: "Every corner, from scrubbing tiles and disinfecting surfaces to polishing mirrors and fixtures.",
+          fr: "Chaque recoin : carrelage récuré, surfaces désinfectées, miroirs et robinetterie lustrés.",
+        },
+      },
+      {
+        icon: "home",
+        title: { en: "Living room", fr: "Salon" },
+        body: {
+          en: "Dusting, vacuuming and polishing surfaces so your living space is clean, comfortable and inviting.",
+          fr: "Dépoussiérage, aspiration et lustrage pour un salon propre, confortable et accueillant.",
+        },
+      },
+      {
+        icon: "sparkle",
+        title: { en: "Windows", fr: "Vitres" },
+        body: {
+          en: "Inside and out, removing smudges, dust and grime for a streak-free, crystal-clear view.",
+          fr: "Intérieur et extérieur : traces, poussière et saleté éliminées pour une vue nette, sans traces.",
+        },
+      },
+      {
+        icon: "sofa",
+        title: { en: "Sofa & carpet", fr: "Canapé et tapis" },
+        body: {
+          en: "Lifting out stains, dirt and allergens to bring back their original colour, softness and freshness.",
+          fr: "Taches, saleté et allergènes éliminés pour retrouver couleur, douceur et fraîcheur.",
+        },
+      },
+      {
+        icon: "person",
+        title: { en: "Bedroom", fr: "Chambre" },
+        body: {
+          en: "Dusting, vacuuming and tidying, with extra attention under beds and behind furniture.",
+          fr: "Dépoussiérage, aspiration et rangement, avec une attention particulière sous les lits et derrière les meubles.",
+        },
+      },
+    ],
   },
   {
     slug: "deep-cleaning",

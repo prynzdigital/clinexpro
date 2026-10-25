@@ -20,4 +20,4 @@ export const BUSINESS = {
     "Moka, Pamplemousses & Port Louis",
     "Grand Port & Savanne",
   ],
-};
+} as const;

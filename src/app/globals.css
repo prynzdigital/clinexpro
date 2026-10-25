@@ -2,8 +2,8 @@
 
 /* Clinex Pro brand tokens, taken from the logo and clinexpro.net. */
 :root {
-  --brand: #ec4904; /* button orange on clinexpro.net */
-  --brand-strong: #c23a02; /* hover, and orange text on white (5.4:1) */
+  --brand: #d14000; /* clinexpro.net button orange (#ec4904), deepened so white text passes WCAG AA (4.7:1) */
+  --brand-strong: #b03600; /* hover, and orange text on white */
   --brand-soft: #fff0ea;
   --accent: #fc511d; /* logo orange */
   --navy: #031432; /* logo navy */
@@ -60,7 +60,7 @@ body {
 
 /* Glowing orange pill CTA for dark backgrounds. */
 @utility btn-glow {
-    @apply inline-flex min-h-13 items-center justify-center gap-2 rounded-full bg-brand px-7 text-base font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#ff5a14] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent motion-safe:animate-glow-pulse;
+    @apply inline-flex min-h-13 items-center justify-center gap-2 rounded-full bg-brand px-7 text-base font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent motion-safe:animate-glow-pulse;
     box-shadow: 0 0 0 1px rgb(255 255 255 / 0.15) inset, 0 8px 24px -4px rgb(236 73 4 / 0.6), 0 0 40px rgb(252 81 29 / 0.45);
 }
 

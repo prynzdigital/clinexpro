@@ -43,7 +43,7 @@ export function SiteHeader({ lang, nav }: { lang: Locale; nav: Dictionary["nav"]
         }`}
       >
         <Link href={`/${lang}`} aria-label="Clinex Pro home" className="shrink-0">
-          <Logo priority variant={overHero ? "light" : "default"} />
+          <Logo eager variant={overHero ? "light" : "default"} />
         </Link>
         <nav className={`hidden items-center gap-1 text-sm font-medium lg:flex ${overHero ? "text-white/85" : "text-ink-soft"}`}>
           {links.map((l) => {

@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import type { Dictionary } from "@/dictionaries";
 import { createBookingRequest, type RequestState } from "@/app/[lang]/request-actions";
 import { Icon } from "./icons";
+import { Req, RequiredNote } from "./required-mark";
 
 type Labels = Dictionary["home"]["requestForm"];
 
@@ -43,8 +44,9 @@ export function RequestForm({
       // Rebuild with the returned values after an error so dropdowns keep them too
       // (React only reads a select's defaultValue when it first renders).
       key={state.values ? JSON.stringify(state.values) : "blank"} className="grid gap-4 p-6 sm:grid-cols-2 sm:gap-5 sm:p-8">
+      <RequiredNote text={t.requiredNote} className="sm:col-span-2" />
       <label>
-        <span className={label}>{t.name}</span>
+        <span className={label}>{t.name}<Req /></span>
         <input name="name" defaultValue={state.values?.name ?? ""} required autoComplete="name" className={input + bad("name")} />
       </label>
       <label>
@@ -52,15 +54,15 @@ export function RequestForm({
         <input name="company" defaultValue={state.values?.company ?? ""} autoComplete="organization" className={input + bad("company")} />
       </label>
       <label>
-        <span className={label}>{t.phone}</span>
+        <span className={label}>{t.phone}<Req /></span>
         <input name="phone" defaultValue={state.values?.phone ?? ""} type="tel" required autoComplete="tel" className={input + bad("phone")} />
       </label>
       <label>
-        <span className={label}>{t.email}</span>
+        <span className={label}>{t.email}<Req /></span>
         <input name="email" defaultValue={state.values?.email ?? ""} type="email" required autoComplete="email" className={input + bad("email")} />
       </label>
       <label className="sm:col-span-2">
-        <span className={label}>{t.address}</span>
+        <span className={label}>{t.address}<Req /></span>
         <input name="address" defaultValue={state.values?.address ?? ""} required autoComplete="street-address" className={input + bad("address")} />
       </label>
       <label className="sm:col-span-2">
@@ -77,8 +79,8 @@ export function RequestForm({
         <input name="startDate" defaultValue={state.values?.startDate ?? ""} type="date" min={minDate} className={input + bad("startDate")} />
       </label>
       <label>
-        <span className={label}>{t.contactTime}</span>
-        <select name="contactTime" defaultValue={state.values?.contactTime ?? "morning"} className={input + bad("contactTime")}>
+        <span className={label}>{t.contactTime}<Req /></span>
+        <select name="contactTime" required defaultValue={state.values?.contactTime ?? "morning"} className={input + bad("contactTime")}>
           {Object.entries(t.contactTimes).map(([value, text]) => (
             <option key={value} value={value}>{text}</option>
           ))}

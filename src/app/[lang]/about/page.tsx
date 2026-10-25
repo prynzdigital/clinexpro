@@ -7,6 +7,10 @@ import { getDictionary } from "@/dictionaries";
 import officeTeam from "../../../../public/images/services/office-cleaning.jpg";
 import housekeeper from "../../../../public/images/services/maid-service.jpg";
 import { PageHeader } from "@/components/page-header";
+import { Testimonials } from "@/components/testimonials";
+import { Icon, type IconName } from "@/components/icons";
+
+const SERVE_ICONS: IconName[] = ["home", "office", "hotel", "briefcase"];
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/about">): Promise<Metadata> {
   const { lang } = await params;
@@ -40,6 +44,19 @@ export default async function AboutPage({ params }: PageProps<"/[lang]/about">) 
           </div>
         </section>
         <section>
+          <h2 className="mb-5 text-2xl font-bold">{t.about.serveTitle}</h2>
+          <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {t.about.serve.map((item, i) => (
+              <li key={item} className="flex items-center gap-3 rounded-2xl bg-surface-alt p-4 font-semibold">
+                <span className="grid size-11 shrink-0 place-items-center rounded-full bg-white text-brand-strong shadow-sm">
+                  <Icon name={SERVE_ICONS[i]} width={20} height={20} />
+                </span>
+                {item}
+              </li>
+            ))}
+          </ul>
+        </section>
+        <section>
           <h2 className="mb-5 text-2xl font-bold">{t.about.valuesTitle}</h2>
           <ul className="grid gap-4 sm:grid-cols-3">
             {t.about.values.map((v) => (
@@ -50,8 +67,9 @@ export default async function AboutPage({ params }: PageProps<"/[lang]/about">) 
             ))}
           </ul>
         </section>
-        <Link href={`/${lang}/book`} className="btn-primary">{t.home.ctaBook}</Link>
+        <Link href={`/${lang}/book`} className="btn-glow">{t.home.ctaBook}</Link>
       </div>
+      <Testimonials lang={lang} eyebrow={t.home.testimonialsEyebrow} title={t.home.testimonialsTitle} />
     </>
   );
 }

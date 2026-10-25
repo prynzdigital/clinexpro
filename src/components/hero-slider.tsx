@@ -34,11 +34,18 @@ export function HeroSlider({
   children?: ReactNode;
 }) {
   const [index, setIndex] = useState(0);
+  // Photos are mounted lazily: the current slide and the next one, plus any
+  // already shown. On first load only two of the six photos are fetched.
+  const [mounted, setMounted] = useState<Set<number>>(() => new Set([0, 1]));
   const [paused, setPaused] = useState(false);
   const [hovered, setHovered] = useState(false);
   const touchX = useRef<number | null>(null);
 
-  const go = (i: number) => setIndex((i + slides.length) % slides.length);
+  const go = (i: number) => {
+    const next = (i + slides.length) % slides.length;
+    setIndex(next);
+    setMounted((prev) => (prev.has(next) && prev.has((next + 1) % slides.length) ? prev : new Set([...prev, next, (next + 1) % slides.length])));
+  };
   const running = !paused && !hovered;
 
   const progress = (i: number, vertical = false) => {
@@ -106,14 +113,17 @@ export function HeroSlider({
             aria-hidden="true"
             className={`absolute inset-0 transition-opacity duration-[1200ms] ease-out ${i === index ? "opacity-100" : "opacity-0"}`}
           >
-            <Image
-              src={s.image}
-              alt=""
-              fill
-              priority={i === 0}
-              sizes="(min-width: 1024px) 62vw, 100vw"
-              className={`object-cover ${i === index ? "animate-hero-zoom motion-reduce:animate-none" : ""}`}
-            />
+            {mounted.has(i) && (
+              <Image
+                src={s.image}
+                alt=""
+                fill
+                loading={i === 0 ? "eager" : "lazy"}
+                fetchPriority={i === 0 ? "high" : "low"}
+                sizes="(min-width: 1024px) 62vw, 100vw"
+                className={`object-cover ${i === index ? "animate-hero-zoom motion-reduce:animate-none" : ""}`}
+              />
+            )}
           </div>
         ))}
         <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/70 to-navy/40 lg:bg-gradient-to-r lg:from-navy lg:via-navy/25 lg:to-transparent" />
@@ -155,6 +165,7 @@ export function HeroSlider({
                     className="btn border border-white/30 bg-white/10 text-white backdrop-blur-md hover:bg-white/20"
                   >
                     {s.secondary.label}
+                    <span className="sr-only"> — {s.label}</span>
                   </Link>
                 </div>
               </div>
