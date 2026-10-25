@@ -23,7 +23,16 @@ const RequestInput = z.object({
   notes: z.string().trim().max(2000).optional(),
 });
 
-export type RequestState = { status: "idle" | "sent" | "error"; fieldErrors?: string[] };
+export type RequestState = { status: "idle" | "sent" | "error"; fieldErrors?: string[]; values?: Record<string, string> };
+
+/** What the visitor typed, sent back on errors so the form keeps it after React resets it. */
+function typedValues(formData: FormData) {
+  const values: Record<string, string> = {};
+  formData.forEach((v, k) => {
+    if (k !== "website" && typeof v === "string") values[k] = v;
+  });
+  return values;
+}
 
 // Business services map onto the lead's sector; everything else is "other".
 const SECTOR_BY_SERVICE: Record<string, "office" | "hotel"> = {
@@ -36,7 +45,11 @@ export async function createBookingRequest(_prev: RequestState, formData: FormDa
   if (formData.get("website")) return { status: "sent" };
   const parsed = RequestInput.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
-    return { status: "error", fieldErrors: parsed.error.issues.map((i) => String(i.path[0])) };
+    return {
+      status: "error",
+      fieldErrors: parsed.error.issues.map((i) => String(i.path[0])),
+      values: typedValues(formData),
+    };
   }
   const r = parsed.data;
   const service = r.service && getService(r.service) ? r.service : null;

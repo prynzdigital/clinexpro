@@ -14,14 +14,27 @@ const LeadInput = z.object({
   message: z.string().trim().max(2000).optional(),
 });
 
-export type LeadState = { status: "idle" | "sent" | "error"; fieldErrors?: string[] };
+export type LeadState = { status: "idle" | "sent" | "error"; fieldErrors?: string[]; values?: Record<string, string> };
+
+/** What the visitor typed, sent back on errors so the form keeps it after React resets it. */
+function typedValues(formData: FormData) {
+  const values: Record<string, string> = {};
+  formData.forEach((v, k) => {
+    if (k !== "website" && typeof v === "string") values[k] = v;
+  });
+  return values;
+}
 
 export async function createLead(_prev: LeadState, formData: FormData): Promise<LeadState> {
   // Honeypot field is invisible to people; bots that fill it get a silent "success".
   if (formData.get("website")) return { status: "sent" };
   const parsed = LeadInput.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
-    return { status: "error", fieldErrors: parsed.error.issues.map((i) => String(i.path[0])) };
+    return {
+      status: "error",
+      fieldErrors: parsed.error.issues.map((i) => String(i.path[0])),
+      values: typedValues(formData),
+    };
   }
   const lead = parsed.data;
   const db = await getDb();

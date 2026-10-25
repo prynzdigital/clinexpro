@@ -38,30 +38,34 @@ export function RequestForm({
   const label = "mb-1.5 block text-sm font-semibold text-ink";
 
   return (
-    <form action={action} className="grid gap-4 p-6 sm:grid-cols-2 sm:gap-5 sm:p-8">
+    <form
+      action={action}
+      // Rebuild with the returned values after an error so dropdowns keep them too
+      // (React only reads a select's defaultValue when it first renders).
+      key={state.values ? JSON.stringify(state.values) : "blank"} className="grid gap-4 p-6 sm:grid-cols-2 sm:gap-5 sm:p-8">
       <label>
         <span className={label}>{t.name}</span>
-        <input name="name" required autoComplete="name" className={input + bad("name")} />
+        <input name="name" defaultValue={state.values?.name ?? ""} required autoComplete="name" className={input + bad("name")} />
       </label>
       <label>
         <span className={label}>{t.company}</span>
-        <input name="company" autoComplete="organization" className={input + bad("company")} />
+        <input name="company" defaultValue={state.values?.company ?? ""} autoComplete="organization" className={input + bad("company")} />
       </label>
       <label>
         <span className={label}>{t.phone}</span>
-        <input name="phone" type="tel" required autoComplete="tel" className={input + bad("phone")} />
+        <input name="phone" defaultValue={state.values?.phone ?? ""} type="tel" required autoComplete="tel" className={input + bad("phone")} />
       </label>
       <label>
         <span className={label}>{t.email}</span>
-        <input name="email" type="email" required autoComplete="email" className={input + bad("email")} />
+        <input name="email" defaultValue={state.values?.email ?? ""} type="email" required autoComplete="email" className={input + bad("email")} />
       </label>
       <label className="sm:col-span-2">
         <span className={label}>{t.address}</span>
-        <input name="address" required autoComplete="street-address" className={input + bad("address")} />
+        <input name="address" defaultValue={state.values?.address ?? ""} required autoComplete="street-address" className={input + bad("address")} />
       </label>
       <label className="sm:col-span-2">
         <span className={label}>{t.service}</span>
-        <select name="service" defaultValue="" className={input + bad("service")}>
+        <select name="service" defaultValue={state.values?.service ?? ""} className={input + bad("service")}>
           <option value="">{t.serviceOther}</option>
           {services.map((s) => (
             <option key={s.slug} value={s.slug}>{s.name}</option>
@@ -70,11 +74,11 @@ export function RequestForm({
       </label>
       <label>
         <span className={label}>{t.startDate}</span>
-        <input name="startDate" type="date" min={minDate} className={input + bad("startDate")} />
+        <input name="startDate" defaultValue={state.values?.startDate ?? ""} type="date" min={minDate} className={input + bad("startDate")} />
       </label>
       <label>
         <span className={label}>{t.contactTime}</span>
-        <select name="contactTime" defaultValue="morning" className={input + bad("contactTime")}>
+        <select name="contactTime" defaultValue={state.values?.contactTime ?? "morning"} className={input + bad("contactTime")}>
           {Object.entries(t.contactTimes).map(([value, text]) => (
             <option key={value} value={value}>{text}</option>
           ))}
@@ -82,7 +86,7 @@ export function RequestForm({
       </label>
       <label className="sm:col-span-2">
         <span className={label}>{t.notes}</span>
-        <textarea name="notes" rows={3} placeholder={t.notesPlaceholder} className={input + bad("notes")} />
+        <textarea name="notes" defaultValue={state.values?.notes ?? ""} rows={3} placeholder={t.notesPlaceholder} className={input + bad("notes")} />
       </label>
       {/* Honeypot: hidden from people, filled by bots. */}
       <input name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />

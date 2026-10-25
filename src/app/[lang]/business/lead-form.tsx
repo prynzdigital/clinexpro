@@ -20,27 +20,31 @@ export function LeadForm({ t }: { t: Dictionary["business"] }) {
   const field = (name: string) => `field ${invalid(name) ? "border-danger" : ""}`;
 
   return (
-    <form action={action} className="card space-y-4 self-start p-6 sm:p-8">
+    <form
+      action={action}
+      // Rebuild with the returned values after an error so dropdowns keep them too
+      // (React only reads a select's defaultValue when it first renders).
+      key={state.values ? JSON.stringify(state.values) : "blank"} className="card space-y-4 self-start p-6 sm:p-8">
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="sm:col-span-2">
           <span className="label">{t.company}</span>
-          <input name="company" required className={field("company")} autoComplete="organization" />
+          <input name="company" defaultValue={state.values?.company ?? ""} required className={field("company")} autoComplete="organization" />
         </label>
         <label>
           <span className="label">{t.contactName}</span>
-          <input name="contactName" required className={field("contactName")} autoComplete="name" />
+          <input name="contactName" defaultValue={state.values?.contactName ?? ""} required className={field("contactName")} autoComplete="name" />
         </label>
         <label>
           <span className="label">{t.phone}</span>
-          <input name="phone" type="tel" required className={field("phone")} autoComplete="tel" />
+          <input name="phone" defaultValue={state.values?.phone ?? ""} type="tel" required className={field("phone")} autoComplete="tel" />
         </label>
         <label className="sm:col-span-2">
           <span className="label">{t.email}</span>
-          <input name="email" type="email" required className={field("email")} autoComplete="email" />
+          <input name="email" defaultValue={state.values?.email ?? ""} type="email" required className={field("email")} autoComplete="email" />
         </label>
         <label>
           <span className="label">{t.sector}</span>
-          <select name="sector" required className={field("sector")} defaultValue="office">
+          <select name="sector" defaultValue={state.values?.sector ?? "office"} required className={field("sector")}>
             {Object.entries(t.sectors).map(([value, label]) => (
               <option key={value} value={value}>{label}</option>
             ))}
@@ -48,7 +52,7 @@ export function LeadForm({ t }: { t: Dictionary["business"] }) {
         </label>
         <label>
           <span className="label">{t.town}</span>
-          <select name="town" className="field" defaultValue="">
+          <select name="town" defaultValue={state.values?.town ?? ""} className="field">
             <option value="">—</option>
             {TOWNS.map((town) => (
               <option key={town.slug} value={town.name}>{town.name}</option>
@@ -57,7 +61,7 @@ export function LeadForm({ t }: { t: Dictionary["business"] }) {
         </label>
         <label className="sm:col-span-2">
           <span className="label">{t.message}</span>
-          <textarea name="message" rows={4} className="field" />
+          <textarea name="message" defaultValue={state.values?.message ?? ""} rows={4} className="field" />
         </label>
         {/* Honeypot: hidden from people, filled by bots. */}
         <input name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
