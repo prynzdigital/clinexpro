@@ -6,6 +6,7 @@ import { SERVICES, getService, serviceImage } from "@/content/services";
 import { getPricedService, formatMur } from "@/lib/pricing";
 import { HeroSlider, type HeroSlide } from "@/components/hero-slider";
 import { RatingBadge } from "@/components/rating-badge";
+import { Reveal } from "@/components/reveal";
 import { TOWNS } from "@/content/towns";
 import { ServiceCard } from "@/components/service-card";
 import { Icon, type IconName } from "@/components/icons";
@@ -16,7 +17,6 @@ import officeCleaning from "../../../public/images/services/office-cleaning.jpg"
 import mauritiusMap from "../../../public/images/mauritius-map.png";
 
 const TRUST_ICONS: IconName[] = ["leaf", "shield", "calendar", "star"];
-const HOW_ICONS: IconName[] = ["sparkle", "calendar", "home"];
 
 export default async function Home({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
@@ -78,45 +78,47 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         </div>
       </section>
 
-      {/* How it works: the photo stays pinned while the steps scroll over it.
-          Uses position: sticky (works on iOS, unlike background-attachment: fixed). */}
-      <section className="relative bg-navy text-white">
-        <div className="sticky top-0 h-svh overflow-hidden" aria-hidden="true">
+      {/* How it works: compact band with a fixed background photo. The photo is
+          position: fixed and clipped to this section by clip-path, which keeps it
+          still while the page scrolls (also on iOS, unlike background-attachment). */}
+      <section className="relative isolate overflow-hidden text-white [clip-path:inset(0)]">
+        <div className="fixed inset-0 -z-10" aria-hidden="true">
           <Image src={howBackground} alt="" fill sizes="100vw" className="object-cover" />
-          <div className="absolute inset-0 bg-navy/55" />
-          <div className="absolute inset-0 bg-gradient-to-r from-navy via-navy/60 to-transparent" />
+          <div className="absolute inset-0 bg-navy/75" />
+          <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-navy/60" />
         </div>
 
-        <div className="relative -mt-[100svh] min-h-svh">
-          <div className="container-page grid gap-10 py-24 sm:py-32 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
-            <div className="lg:sticky lg:top-32 lg:self-start">
-              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-accent">{t.home.howEyebrow}</p>
-              <h2 className="text-4xl font-extrabold tracking-tight sm:text-5xl">{t.home.howTitle}</h2>
-              <p className="mt-4 max-w-md text-lg text-white/75">{t.home.howSubtitle}</p>
-              <Link href={`/${lang}/book`} className="btn-primary mt-8 shadow-lg shadow-brand/30">
-                {t.home.ctaBook}
-                <Icon name="arrow" width={18} height={18} />
-              </Link>
-            </div>
+        <div className="container-page grid gap-12 py-20 sm:py-24 lg:grid-cols-[0.9fr_2fr] lg:items-center lg:gap-10">
+          <Reveal>
+            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.22em] text-accent">{t.home.howEyebrow}</p>
+            <h2 className="text-4xl font-light leading-[1.1] tracking-tight sm:text-5xl">
+              {t.home.howTitle}
+              <span className="text-accent">.</span>
+            </h2>
+            <p className="mt-5 max-w-xs text-lg font-light text-white/75">{t.home.howSubtitle}</p>
+            <Link href={`/${lang}/book`} className="btn-glow mt-8">
+              {t.home.ctaBook}
+              <Icon name="arrow" width={18} height={18} />
+            </Link>
+          </Reveal>
 
-            <ol className="space-y-6 sm:space-y-10 lg:space-y-[28vh] lg:py-[12vh]">
-              {t.home.how.map((step, i) => (
-                <li
-                  key={step.title}
-                  className="rounded-3xl border border-white/15 bg-white/10 p-6 shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-8"
-                >
-                  <div className="mb-6 flex items-center justify-between">
-                    <span className="grid size-14 place-items-center rounded-2xl bg-brand text-white shadow-lg shadow-brand/30">
-                      <Icon name={HOW_ICONS[i]} width={26} height={26} />
-                    </span>
-                    <span className="text-5xl font-extrabold text-white/15 sm:text-6xl">{String(i + 1).padStart(2, "0")}</span>
-                  </div>
-                  <h3 className="mb-2 text-2xl font-bold">{step.title}</h3>
-                  <p className="text-white/75">{step.body}</p>
-                </li>
-              ))}
-            </ol>
-          </div>
+          <ol className="grid grid-cols-2 lg:grid-cols-4">
+            {t.home.how.map((step, i) => (
+              <li
+                key={step.title}
+                className="border-t border-white/15 px-4 py-5 sm:px-6 [&:nth-child(-n+2)]:border-t-0 [&:nth-child(odd)]:pl-0 lg:border-l lg:border-t-0 lg:py-2 lg:pl-6 lg:[&:nth-child(odd)]:pl-6"
+              >
+                <Reveal delay={150 + i * 150}>
+                  <span className="block text-4xl font-light leading-none text-accent sm:text-5xl">{String(i + 1).padStart(2, "0")}</span>
+                  <svg viewBox="0 0 10 28" width={10} height={28} className="my-3 text-accent sm:my-5" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" aria-hidden="true">
+                    <path d="M5 1v25M1.5 22.5 5 26l3.5-3.5" />
+                  </svg>
+                  <h3 className="mb-2 font-semibold">{step.title}</h3>
+                  <p className="text-sm leading-relaxed text-white/70">{step.body}</p>
+                </Reveal>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 

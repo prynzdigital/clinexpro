@@ -58,6 +58,12 @@ body {
     @apply btn border border-line bg-white text-ink hover:border-brand hover:text-brand-strong;
 }
 
+/* Glowing orange pill CTA for dark backgrounds. */
+@utility btn-glow {
+    @apply inline-flex min-h-13 items-center justify-center gap-2 rounded-full bg-brand px-7 text-base font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#ff5a14] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent motion-safe:animate-glow-pulse;
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.15) inset, 0 8px 24px -4px rgb(236 73 4 / 0.6), 0 0 40px rgb(252 81 29 / 0.45);
+}
+
 @utility card {
     @apply rounded-2xl border border-line bg-white;
 }
@@ -78,10 +84,15 @@ body {
 @theme {
   --animate-hero-progress: hero-progress linear forwards;
   --animate-hero-zoom: hero-zoom 9s ease-out forwards;
+  --animate-glow-pulse: glow-pulse 2.8s ease-in-out infinite;
 
   @keyframes hero-progress {
     from { transform: scaleX(0); }
     to { transform: scaleX(1); }
+  }
+  @keyframes glow-pulse {
+    0%, 100% { filter: drop-shadow(0 0 0 rgb(252 81 29 / 0)); }
+    50% { filter: drop-shadow(0 0 14px rgb(252 81 29 / 0.55)); }
   }
   @keyframes hero-zoom {
     from { transform: scale(1.02); }
