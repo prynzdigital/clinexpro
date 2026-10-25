@@ -155,44 +155,88 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
       </section>
 
       {/* Who we are, with Clinex Pro's own YouTube video. */}
-      <section className="container-page grid gap-12 py-20 sm:py-24 lg:grid-cols-[1fr_1.1fr] lg:items-center lg:gap-16">
-        <Reveal>
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.22em] text-brand-strong">{t.home.whoEyebrow}</p>
-          <h2 className="text-3xl font-bold leading-tight tracking-tight text-balance sm:text-4xl">
-            {t.home.whoTitle}
-            <span className="text-brand">.</span>
-          </h2>
-          <div className="mt-5 space-y-4 text-ink-soft">
-            {t.home.whoBody.map((p) => (
-              <p key={p}>{p}</p>
-            ))}
+      <section className="container-page py-20 sm:py-24">
+        <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-center lg:gap-16">
+          <Reveal>
+            <p className="mb-4 text-xs font-semibold uppercase tracking-[0.22em] text-brand-strong">{t.home.whoEyebrow}</p>
+            <h2 className="text-3xl font-bold leading-tight tracking-tight text-balance sm:text-4xl">
+              {t.home.whoTitle}
+              <span className="text-brand">.</span>
+            </h2>
+            <div className="mt-5 space-y-4 text-ink-soft">
+              {t.home.whoBody.map((p) => (
+                <p key={p}>{p}</p>
+              ))}
+            </div>
+            <ul className="mt-7 grid gap-3 sm:grid-cols-2">
+              {t.home.whoPoints.map((point) => (
+                <li key={point} className="flex items-start gap-3 text-sm font-semibold">
+                  <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-brand-soft text-brand-strong">
+                    <Icon name="check" width={14} height={14} />
+                  </span>
+                  {point}
+                </li>
+              ))}
+            </ul>
+            <Link
+              href={`/${lang}/about`}
+              className="group mt-8 inline-flex items-center gap-2 border-b border-ink/40 pb-0.5 text-sm font-semibold hover:border-brand hover:text-brand-strong"
+            >
+              {t.home.whoCta}
+              <Icon name="arrow" width={16} height={16} className="text-brand transition group-hover:translate-x-0.5" />
+            </Link>
+          </Reveal>
+          <Reveal delay={200}>
+            <VideoCard
+              videoId="dqcwIcJlPOk"
+              poster={videoPoster}
+              title={t.home.videoTitle}
+              caption={t.home.videoCaption}
+              playLabel={t.home.videoPlay}
+            />
+          </Reveal>
+        </div>
+
+        <Reveal delay={100} className="mt-16 sm:mt-20">
+          <div className="grid items-center gap-8 rounded-[1.75rem] bg-surface-alt p-6 sm:p-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-12">
+            <Image
+              src={mauritiusMap}
+              alt="Map of Mauritius showing Clinex Pro coverage across the island"
+              sizes="(min-width: 1024px) 460px, 100vw"
+              className="mx-auto h-auto w-full max-w-sm lg:max-w-md"
+            />
+            <div>
+              <h3 className="text-2xl font-bold tracking-tight sm:text-3xl">{t.home.areasTitle}</h3>
+              <p className="mt-2 text-ink-soft">{t.home.areasIntro}</p>
+              <ul className="mt-5 grid gap-2 text-sm font-semibold sm:grid-cols-2">
+                {BUSINESS.regions.map((region) => (
+                  <li key={region} className="flex items-start gap-2">
+                    <Icon name="pin" width={16} height={16} className="mt-0.5 shrink-0 text-brand-strong" />
+                    {region}
+                  </li>
+                ))}
+              </ul>
+              <ul className="mt-6 flex flex-wrap gap-2">
+                {TOWNS.map((town) => (
+                  <li key={town.slug}>
+                    <Link
+                      href={`/${lang}/areas/${town.slug}`}
+                      className="inline-flex rounded-full border border-line bg-white px-3.5 py-1.5 text-sm font-medium hover:border-brand hover:text-brand-strong"
+                    >
+                      {town.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href={`/${lang}/areas`}
+                className="group mt-6 inline-flex items-center gap-2 border-b border-ink/40 pb-0.5 text-sm font-semibold hover:border-brand hover:text-brand-strong"
+              >
+                {t.home.areasCta}
+                <Icon name="arrow" width={16} height={16} className="text-brand transition group-hover:translate-x-0.5" />
+              </Link>
+            </div>
           </div>
-          <ul className="mt-7 grid gap-3 sm:grid-cols-2">
-            {t.home.whoPoints.map((point) => (
-              <li key={point} className="flex items-start gap-3 text-sm font-semibold">
-                <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-brand-soft text-brand-strong">
-                  <Icon name="check" width={14} height={14} />
-                </span>
-                {point}
-              </li>
-            ))}
-          </ul>
-          <Link
-            href={`/${lang}/about`}
-            className="group mt-8 inline-flex items-center gap-2 border-b border-ink/40 pb-0.5 text-sm font-semibold hover:border-brand hover:text-brand-strong"
-          >
-            {t.home.whoCta}
-            <Icon name="arrow" width={16} height={16} className="text-brand transition group-hover:translate-x-0.5" />
-          </Link>
-        </Reveal>
-        <Reveal delay={200}>
-          <VideoCard
-            videoId="dqcwIcJlPOk"
-            poster={videoPoster}
-            title={t.home.videoTitle}
-            caption={t.home.videoCaption}
-            playLabel={t.home.videoPlay}
-          />
         </Reveal>
       </section>
 
@@ -278,33 +322,6 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
               />
             </div>
           </Reveal>
-        </div>
-      </section>
-
-      <section className="bg-surface-alt py-14">
-        <div className="container-page grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:items-center">
-          <div>
-            <h2 className="mb-6 text-2xl font-bold tracking-tight sm:text-3xl">{t.home.areasTitle}</h2>
-            <ul className="flex flex-wrap gap-2">
-              {TOWNS.map((town) => (
-                <li key={town.slug}>
-                  <Link
-                    href={`/${lang}/areas/${town.slug}`}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-4 py-2 text-sm font-medium hover:border-brand hover:text-brand-strong"
-                  >
-                    <Icon name="pin" width={16} height={16} />
-                    {town.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <Image
-            src={mauritiusMap}
-            alt="Map of Mauritius showing Clinex Pro coverage across the island"
-            sizes="(min-width: 1024px) 520px, 100vw"
-            className="mx-auto h-auto w-full max-w-md"
-          />
         </div>
       </section>
     </>

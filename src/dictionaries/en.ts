@@ -139,6 +139,8 @@ const en = {
       error: "Please check the highlighted fields.",
     },
     areasTitle: "Areas we serve",
+    areasIntro: "Our teams cover the whole island, from Grand Baie to Mahébourg.",
+    areasCta: "See all areas",
     businessTitle: "Cleaning for offices, hotels and villas",
     businessBody:
       "Daily office cleaning, hotel housekeeping support and villa turnovers, with a dedicated supervisor and monthly invoicing.",

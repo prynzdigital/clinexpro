@@ -141,6 +141,8 @@ const fr: Dictionary = {
       error: "Veuillez vérifier les champs en surbrillance.",
     },
     areasTitle: "Régions desservies",
+    areasIntro: "Nos équipes couvrent toute l'île, de Grand Baie à Mahébourg.",
+    areasCta: "Voir toutes les régions",
     businessTitle: "Nettoyage pour bureaux, hôtels et villas",
     businessBody:
       "Nettoyage quotidien de bureaux, renfort d'entretien hôtelier et remise en état de villas, avec un superviseur dédié et une facturation mensuelle.",
