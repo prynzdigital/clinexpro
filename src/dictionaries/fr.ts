@@ -13,6 +13,7 @@ const fr: Dictionary = {
     about: "À propos",
     contact: "Contact",
     book: "Réserver",
+    call: "Appeler",
     menu: "Menu",
     close: "Fermer",
     language: "English",

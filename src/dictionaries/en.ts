@@ -11,6 +11,7 @@ const en = {
     about: "About",
     contact: "Contact",
     book: "Book now",
+    call: "Call us",
     menu: "Menu",
     close: "Close",
     language: "Français",

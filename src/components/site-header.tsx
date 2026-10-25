@@ -80,7 +80,7 @@ export function SiteHeader({ lang, nav }: { lang: Locale; nav: Dictionary["nav"]
             links={links}
             lang={lang}
             light={overHero}
-            labels={{ menu: nav.menu, close: nav.close, language: nav.language }}
+            labels={{ menu: nav.menu, close: nav.close, language: nav.language, book: nav.book, call: nav.call }}
           />
         </div>
       </div>
