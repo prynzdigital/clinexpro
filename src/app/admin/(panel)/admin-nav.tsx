@@ -4,18 +4,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon, type IconName } from "@/components/icons";
 
-const LINKS: { href: string; label: string; icon: IconName }[] = [
+const LINKS: { href: string; label: string; icon: IconName; ownerOnly?: boolean }[] = [
   { href: "/admin", label: "Overview", icon: "chart" },
   { href: "/admin/bookings", label: "Bookings", icon: "calendar" },
   { href: "/admin/customers", label: "Customers", icon: "users" },
   { href: "/admin/leads", label: "Business leads", icon: "briefcase" },
+  { href: "/admin/team", label: "Team", icon: "shield", ownerOnly: true },
+  { href: "/admin/account", label: "My account", icon: "person" },
 ];
 
-export function AdminNav() {
+export function AdminNav({ role }: { role: string }) {
   const pathname = usePathname();
   return (
     <nav className="flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-col lg:px-3 lg:pb-0">
-      {LINKS.map((l) => {
+      {LINKS.filter((l) => !l.ownerOnly || role === "owner").map((l) => {
         const active = l.href === "/admin" ? pathname === "/admin" : pathname.startsWith(l.href);
         return (
           <Link

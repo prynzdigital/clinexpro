@@ -3,7 +3,7 @@ import { SignJWT, jwtVerify } from "jose";
 export const SESSION_COOKIE = "clinex_admin";
 export const SESSION_TTL_SECONDS = 60 * 60 * 12;
 
-export type SessionPayload = { uid: number; email: string; name: string; role: string };
+export type SessionPayload = { uid: number; email: string; name: string; role: string; ver: number };
 
 function secret() {
   const value = process.env.SESSION_SECRET;

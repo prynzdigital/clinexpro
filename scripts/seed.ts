@@ -6,6 +6,7 @@
 //   npm run seed -- --demo # admin user + demo data
 import path from "node:path";
 import bcrypt from "bcryptjs";
+import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
@@ -29,8 +30,12 @@ async function main() {
   const name = process.env.ADMIN_NAME ?? "Owner";
   await db
     .insert(schema.adminUsers)
-    .values({ email, name, passwordHash })
-    .onConflictDoUpdate({ target: schema.adminUsers.email, set: { passwordHash, name } });
+    .values({ email, name, passwordHash, role: "owner" })
+    // Re-running resets the password and restores owner access (signs out old sessions).
+    .onConflictDoUpdate({
+      target: schema.adminUsers.email,
+      set: { passwordHash, name, role: "owner", active: true, mustChangePassword: false, sessionVersion: sql`${schema.adminUsers.sessionVersion} + 1` },
+    });
   console.log(`Admin user ready: ${email}`);
 
   if (process.argv.includes("--demo")) {

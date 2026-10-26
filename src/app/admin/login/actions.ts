@@ -19,8 +19,10 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
   const [user] = await db.select().from(schema.adminUsers).where(eq(schema.adminUsers.email, email)).limit(1);
   const ok = await bcrypt.compare(password, user?.passwordHash ?? DUMMY_HASH);
   // The email is returned so the form can keep it; the password never is.
-  if (!user || !ok) return { error: "Incorrect email or password.", email };
+  // A deactivated account gets the same message, so it doesn't reveal who has access.
+  if (!user || !ok || !user.active) return { error: "Incorrect email or password.", email };
 
-  await startSession({ uid: user.id, email: user.email, name: user.name, role: user.role });
+  await db.update(schema.adminUsers).set({ lastLoginAt: new Date() }).where(eq(schema.adminUsers.id, user.id));
+  await startSession(user);
   redirect("/admin");
 }

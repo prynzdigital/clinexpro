@@ -1,4 +1,5 @@
 import {
+  boolean,
   integer,
   jsonb,
   pgEnum,
@@ -126,7 +127,14 @@ export const adminUsers = pgTable("admin_users", {
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
   passwordHash: text("password_hash").notNull(),
+  // "owner" manages the team and settings; "manager" runs bookings, customers and leads.
   role: text("role").notNull().default("owner"),
+  active: boolean("active").notNull().default(true),
+  // Set when someone else chose the password (new account, reset); cleared once they change it.
+  mustChangePassword: boolean("must_change_password").notNull().default(false),
+  // Bumped on password change, reset, role change or deactivation: signs out every existing session.
+  sessionVersion: integer("session_version").notNull().default(0),
+  lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -134,3 +142,4 @@ export type Customer = typeof customers.$inferSelect;
 export type Booking = typeof bookings.$inferSelect;
 export type Lead = typeof leads.$inferSelect;
 export type Payment = typeof payments.$inferSelect;
+export type AdminUser = typeof adminUsers.$inferSelect;
