@@ -6,9 +6,11 @@ import { Icon, type IconName } from "@/components/icons";
 
 const LINKS: { href: string; label: string; icon: IconName; ownerOnly?: boolean }[] = [
   { href: "/admin", label: "Overview", icon: "chart" },
+  { href: "/admin/schedule", label: "Schedule", icon: "board" },
   { href: "/admin/bookings", label: "Bookings", icon: "calendar" },
   { href: "/admin/customers", label: "Customers", icon: "users" },
   { href: "/admin/leads", label: "Business leads", icon: "briefcase" },
+  { href: "/admin/staff", label: "Staff", icon: "badge" },
   { href: "/admin/team", label: "Team", icon: "shield", ownerOnly: true },
   { href: "/admin/account", label: "My account", icon: "person" },
 ];

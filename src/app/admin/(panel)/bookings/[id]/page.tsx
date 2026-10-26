@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { desc, eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { requireAdmin } from "@/lib/auth";
 import { getService } from "@/content/services";
@@ -8,6 +8,7 @@ import { getTown } from "@/content/towns";
 import en from "@/dictionaries/en";
 import { BookingBadge, PageHeader, PaymentBadge, label, mur, shortDate } from "../../ui";
 import { updateBooking } from "../../actions";
+import { hoursLabel, jobMinutes, mondayOf } from "@/lib/schedule";
 
 export const metadata = { title: "Booking" };
 
@@ -29,6 +30,12 @@ export default async function BookingDetail({ params }: PageProps<"/admin/bookin
     .from(schema.payments)
     .where(eq(schema.payments.bookingId, booking.id))
     .orderBy(desc(schema.payments.createdAt));
+  const team = await db
+    .select({ id: schema.staff.id, name: schema.staff.name, color: schema.staff.color })
+    .from(schema.bookingAssignments)
+    .innerJoin(schema.staff, eq(schema.bookingAssignments.staffId, schema.staff.id))
+    .where(eq(schema.bookingAssignments.bookingId, booking.id))
+    .orderBy(asc(schema.staff.name));
   const { addons = [], ...counts } = booking.details as Record<string, number> & { addons?: string[] };
   const whatsapp = `https://wa.me/${customer.phone.replace(/\D/g, "")}`;
 
@@ -45,7 +52,7 @@ export default async function BookingDetail({ params }: PageProps<"/admin/bookin
       <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
         <section className="card divide-y divide-line">
           <Item label="Service" value={`${getService(booking.service)?.name.en} · ${label(booking.frequency)}`} />
-          <Item label="When" value={`${shortDate(booking.date)} at ${booking.timeSlot}`} />
+          <Item label="When" value={`${shortDate(booking.date)} at ${booking.timeSlot} · ${hoursLabel(jobMinutes(booking))}`} />
           <Item label="Address" value={`${booking.address}, ${getTown(booking.town)?.name ?? booking.town}`} />
           <Item
             label="Details"
@@ -63,6 +70,22 @@ export default async function BookingDetail({ params }: PageProps<"/admin/bookin
             <p className="text-sm"><a href={`tel:${customer.phone}`} className="hover:underline">{customer.phone}</a></p>
             <p className="text-sm"><a href={`mailto:${customer.email}`} className="hover:underline">{customer.email}</a></p>
             <a href={whatsapp} target="_blank" rel="noopener" className="btn-secondary mt-3 min-h-10 w-full text-sm">Message on WhatsApp</a>
+          </section>
+
+          <section className="card p-5">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <h2 className="font-semibold">Team</h2>
+              <Link href={`/admin/schedule?week=${mondayOf(booking.date)}`} className="text-sm font-medium text-brand-strong hover:underline">Plan on schedule</Link>
+            </div>
+            {team.length ? (
+              <div className="flex flex-wrap gap-1.5">
+                {team.map((p) => (
+                  <span key={p.id} className="rounded-full px-2.5 py-0.5 text-xs font-medium text-white" style={{ background: p.color }}>{p.name}</span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-amber-800">No cleaner assigned yet.</p>
+            )}
           </section>
 
           <section className="card p-5">

@@ -25,6 +25,8 @@ const paths = {
   users: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 10a7 7 0 0 1 14 0m1-10a3 3 0 1 0 0-6m2 16h3a6 6 0 0 0-4-5.6",
   briefcase: "M3 8h18v12H3zm6 0V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3M3 13h18",
   logout: "M15 4h4v16h-4M10 8l-4 4 4 4m-4-4h11",
+  board: "M4 4h16v16H4zm0 5h16M9 9v11m5-11v11",
+  badge: "M4 5h16v14H4zm5 4.5a2 2 0 1 0 0 .01M6 16a3 3 0 0 1 6 0m3-6h3m-3 3h3",
 } as const;
 
 export type IconName = keyof typeof paths;

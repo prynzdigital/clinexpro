@@ -9,6 +9,8 @@ import {
   timestamp,
   date,
   uniqueIndex,
+  primaryKey,
+  index,
 } from "drizzle-orm/pg-core";
 
 export const bookingStatus = pgEnum("booking_status", [
@@ -73,6 +75,8 @@ export const bookings = pgTable("bookings", {
   frequency: frequency("frequency").notNull().default("once"),
   date: date("date").notNull(),
   timeSlot: text("time_slot").notNull(),
+  // Set by the team when planning; null means the service's usual length (see lib/schedule).
+  durationMinutes: integer("duration_minutes"),
   address: text("address").notNull(),
   town: text("town").notNull(),
   notes: text("notes"),
@@ -122,6 +126,32 @@ export const payments = pgTable(
   (t) => [uniqueIndex("payments_provider_ref_idx").on(t.provider, t.providerRef)],
 );
 
+// Cleaners and supervisors who do the jobs. Not dashboard users (that's adminUsers).
+export const staff = pgTable("staff", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  phone: text("phone"),
+  // Hex colour that marks this person's jobs on the schedule.
+  color: text("color").notNull(),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Who is on which job. Team jobs have several rows.
+export const bookingAssignments = pgTable(
+  "booking_assignments",
+  {
+    bookingId: integer("booking_id")
+      .notNull()
+      .references(() => bookings.id, { onDelete: "cascade" }),
+    staffId: integer("staff_id")
+      .notNull()
+      .references(() => staff.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.bookingId, t.staffId] }), index("booking_assignments_staff_idx").on(t.staffId)],
+);
+
 export const adminUsers = pgTable("admin_users", {
   id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
@@ -143,3 +173,4 @@ export type Booking = typeof bookings.$inferSelect;
 export type Lead = typeof leads.$inferSelect;
 export type Payment = typeof payments.$inferSelect;
 export type AdminUser = typeof adminUsers.$inferSelect;
+export type Staff = typeof staff.$inferSelect;
