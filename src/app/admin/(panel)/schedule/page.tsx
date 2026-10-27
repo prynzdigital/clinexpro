@@ -44,6 +44,7 @@ export default async function SchedulePage({ searchParams }: PageProps<"/admin/s
     town: getTown(booking.town)?.name ?? booking.town,
     status: booking.status,
     staffIds: assignments.filter((x) => x.bookingId === booking.id).map((x) => x.staffId),
+    progress: progressOf(assignments.filter((x) => x.bookingId === booking.id)),
   }));
   const unassigned = jobs.filter((j) => j.staffIds.length === 0).length;
 
@@ -75,4 +76,10 @@ export default async function SchedulePage({ searchParams }: PageProps<"/admin/s
       />
     </>
   );
+}
+
+/** From the staff app: has anyone arrived, and has everyone finished? */
+function progressOf(team: { checkedInAt: Date | null; checkedOutAt: Date | null }[]): BoardJob["progress"] {
+  if (team.length && team.every((t) => t.checkedOutAt)) return "done";
+  return team.some((t) => t.checkedInAt) ? "on-site" : "none";
 }

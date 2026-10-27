@@ -1,8 +1,9 @@
 import { asc, desc } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { requireAdmin } from "@/lib/auth";
-import { Empty, PageHeader } from "../ui";
+import { Empty, PageHeader, shortDate } from "../ui";
 import { addStaff, updateStaff } from "./actions";
+import { AppAccess } from "./app-access";
 
 export const metadata = { title: "Staff" };
 
@@ -18,26 +19,29 @@ export default async function StaffPage() {
         <section className="space-y-3">
           {people.length === 0 && <Empty>Add your cleaners to start planning jobs on the schedule.</Empty>}
           {people.map((p) => (
-            <form key={p.id} action={updateStaff} className={`card flex flex-wrap items-end gap-3 p-4 ${p.active ? "" : "opacity-70"}`}>
-              <input type="hidden" name="id" value={p.id} />
-              <span className="mb-3 size-4 shrink-0 rounded-full" style={{ background: p.color }} aria-hidden />
-              <label className="min-w-40 flex-1">
-                <span className="label">Name</span>
-                <input name="name" defaultValue={p.name} required minLength={2} className="field" />
-              </label>
-              <label className="min-w-36 flex-1">
-                <span className="label">Phone</span>
-                <input name="phone" type="tel" defaultValue={p.phone ?? ""} className="field" />
-              </label>
-              <label className="min-w-32">
-                <span className="label">Status</span>
-                <select name="active" defaultValue={String(p.active)} className="field">
-                  <option value="true">Active</option>
-                  <option value="false">Inactive</option>
-                </select>
-              </label>
-              <button type="submit" className="btn-secondary min-h-11">Save</button>
-            </form>
+            <div key={p.id} className={`card space-y-3 p-4 ${p.active ? "" : "opacity-70"}`}>
+              <form action={updateStaff} className="flex flex-wrap items-end gap-3">
+                <input type="hidden" name="id" value={p.id} />
+                <span className="mb-3 size-4 shrink-0 rounded-full" style={{ background: p.color }} aria-hidden />
+                <label className="min-w-40 flex-1">
+                  <span className="label">Name</span>
+                  <input name="name" defaultValue={p.name} required minLength={2} className="field" />
+                </label>
+                <label className="min-w-36 flex-1">
+                  <span className="label">Mobile</span>
+                  <input name="phone" type="tel" defaultValue={p.phone ?? ""} className="field" />
+                </label>
+                <label className="min-w-32">
+                  <span className="label">Status</span>
+                  <select name="active" defaultValue={String(p.active)} className="field">
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                  </select>
+                </label>
+                <button type="submit" className="btn-secondary min-h-11">Save</button>
+              </form>
+              <AppAccess id={p.id} name={p.name} hasPin={Boolean(p.pinHash)} active={p.active} lastLogin={p.lastLoginAt ? shortDate(p.lastLoginAt) : null} />
+            </div>
           ))}
         </section>
 
@@ -49,7 +53,7 @@ export default async function StaffPage() {
               <input name="name" required minLength={2} className="field" autoComplete="off" />
             </label>
             <label className="block">
-              <span className="label">Phone (optional)</span>
+              <span className="label">Mobile (needed for the staff app)</span>
               <input name="phone" type="tel" className="field" autoComplete="off" />
             </label>
             <button type="submit" className="btn-primary w-full">Add</button>

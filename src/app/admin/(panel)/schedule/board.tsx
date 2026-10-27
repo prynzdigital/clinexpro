@@ -18,6 +18,7 @@ export type BoardJob = {
   town: string;
   status: "pending" | "confirmed" | "completed" | "cancelled";
   staffIds: number[];
+  progress: "none" | "on-site" | "done";
 };
 
 type Person = { id: number; name: string; color: string; active: boolean };
@@ -266,13 +267,18 @@ function JobChip({
       onDragStart={onDragStart}
       onClick={onOpen}
       className={`block w-full rounded-lg border bg-white text-left shadow-sm hover:shadow ${onDragStart ? "cursor-grab active:cursor-grabbing" : ""} ${clash ? "border-danger ring-1 ring-danger" : "border-line"} ${large ? "p-4" : "p-1.5 text-xs"}`}
-      aria-label={`${job.timeSlot} ${job.serviceName} for ${job.customer}${clash ? ", overlaps another job" : ""}. Open to plan.`}
+      aria-label={`${job.timeSlot} ${job.serviceName} for ${job.customer}${clash ? ", overlaps another job" : ""}${job.progress === "on-site" ? ", team on site" : job.progress === "done" ? ", finished" : ""}. Open to plan.`}
     >
       <span className="flex items-center gap-1.5 font-semibold">
         <span className={`size-2 shrink-0 rounded-full ${STATUS_DOT[job.status]}`} aria-hidden />
         {job.timeSlot}
         <span className="font-normal text-ink-soft">· {hoursLabel(jobMinutes(job))}</span>
         {clash && <span className="ml-auto text-danger">Overlap</span>}
+        {!clash && job.progress !== "none" && (
+          <span className={`ml-auto rounded px-1 text-[10px] font-semibold ${job.progress === "done" ? "bg-emerald-100 text-emerald-800" : "bg-sky-100 text-sky-800"}`}>
+            {job.progress === "done" ? "Done" : "On site"}
+          </span>
+        )}
       </span>
       <span className="block truncate">{job.customer}</span>
       <span className="block truncate text-ink-soft">{job.serviceName} · {job.town}</span>

@@ -134,6 +134,13 @@ export const staff = pgTable("staff", {
   // Hex colour that marks this person's jobs on the schedule.
   color: text("color").notNull(),
   active: boolean("active").notNull().default(true),
+  // Staff app sign-in: phone + 6-digit PIN set by an admin. Null = no app access.
+  pinHash: text("pin_hash"),
+  failedPinAttempts: integer("failed_pin_attempts").notNull().default(0),
+  pinLockedUntil: timestamp("pin_locked_until", { withTimezone: true }),
+  // Bumped on PIN change or deactivation: signs the phone out.
+  sessionVersion: integer("session_version").notNull().default(0),
+  lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -147,6 +154,10 @@ export const bookingAssignments = pgTable(
     staffId: integer("staff_id")
       .notNull()
       .references(() => staff.id),
+    // Filled in from the staff app.
+    checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
+    checkedOutAt: timestamp("checked_out_at", { withTimezone: true }),
+    report: text("report"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.bookingId, t.staffId] }), index("booking_assignments_staff_idx").on(t.staffId)],

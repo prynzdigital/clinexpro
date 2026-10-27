@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { LOCALES, DEFAULT_LOCALE } from "@/lib/i18n";
-import { SESSION_COOKIE, verifySessionToken } from "@/lib/session-token";
+import { SESSION_COOKIE, STAFF_COOKIE, verifySessionToken, verifyStaffToken } from "@/lib/session-token";
 
 function preferredLocale(request: NextRequest) {
   const header = request.headers.get("accept-language") ?? "";
@@ -23,6 +23,15 @@ export async function proxy(request: NextRequest) {
     const token = request.cookies.get(SESSION_COOKIE)?.value;
     if (!(await verifySessionToken(token))) {
       return NextResponse.redirect(new URL("/admin/login", request.url));
+    }
+    return;
+  }
+
+  // Staff app (cleaners' phones): same optimistic check with its own cookie.
+  if (pathname === "/staff" || pathname.startsWith("/staff/")) {
+    if (pathname === "/staff/login") return;
+    if (!(await verifyStaffToken(request.cookies.get(STAFF_COOKIE)?.value))) {
+      return NextResponse.redirect(new URL("/staff/login", request.url));
     }
     return;
   }

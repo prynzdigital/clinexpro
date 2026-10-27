@@ -31,7 +31,14 @@ export default async function BookingDetail({ params }: PageProps<"/admin/bookin
     .where(eq(schema.payments.bookingId, booking.id))
     .orderBy(desc(schema.payments.createdAt));
   const team = await db
-    .select({ id: schema.staff.id, name: schema.staff.name, color: schema.staff.color })
+    .select({
+      id: schema.staff.id,
+      name: schema.staff.name,
+      color: schema.staff.color,
+      checkedInAt: schema.bookingAssignments.checkedInAt,
+      checkedOutAt: schema.bookingAssignments.checkedOutAt,
+      report: schema.bookingAssignments.report,
+    })
     .from(schema.bookingAssignments)
     .innerJoin(schema.staff, eq(schema.bookingAssignments.staffId, schema.staff.id))
     .where(eq(schema.bookingAssignments.bookingId, booking.id))
@@ -78,11 +85,20 @@ export default async function BookingDetail({ params }: PageProps<"/admin/bookin
               <Link href={`/admin/schedule?week=${mondayOf(booking.date)}`} className="text-sm font-medium text-brand-strong hover:underline">Plan on schedule</Link>
             </div>
             {team.length ? (
-              <div className="flex flex-wrap gap-1.5">
+              <ul className="space-y-2 text-sm">
                 {team.map((p) => (
-                  <span key={p.id} className="rounded-full px-2.5 py-0.5 text-xs font-medium text-white" style={{ background: p.color }}>{p.name}</span>
+                  <li key={p.id}>
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full px-2.5 py-0.5 text-xs font-medium text-white" style={{ background: p.color }}>{p.name}</span>
+                      <span className="text-ink-soft">
+                        {p.checkedInAt ? `In ${clock(p.checkedInAt)}` : "Not checked in"}
+                        {p.checkedOutAt && ` · out ${clock(p.checkedOutAt)}`}
+                      </span>
+                    </span>
+                    {p.report && <span className="mt-1 block rounded-lg bg-amber-50 px-2.5 py-1.5 text-amber-950">{p.report}</span>}
+                  </li>
                 ))}
-              </div>
+              </ul>
             ) : (
               <p className="text-sm text-amber-800">No cleaner assigned yet.</p>
             )}
@@ -136,6 +152,9 @@ const ATTEMPT_TONE: Record<(typeof schema.paymentAttemptStatus.enumValues)[numbe
   failed: "bg-red-100 text-red-800",
   cancelled: "bg-slate-100 text-slate-700",
 };
+
+const clock = (d: Date) =>
+  new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Indian/Mauritius" }).format(d);
 
 function Item({ label, value }: { label: string; value: string }) {
   return (
