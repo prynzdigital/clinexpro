@@ -1,84 +1,89 @@
-import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { requireAdmin } from "@/lib/auth";
+import { mauritiusDate } from "@/lib/dates";
 import { getService } from "@/content/services";
 import { getTown } from "@/content/towns";
-import { BookingBadge, Empty, PageHeader, PaymentBadge, label, mur, shortDate } from "../ui";
+import { BOOKING_TONE_NAME, NewButton, PAYMENT_TONE_NAME, PageHeader, StatCard, label, mur, shortDate } from "../ui";
+import { DataTable, type Row } from "../data-table";
+import { deleteBooking } from "./actions";
+import { bookingBlockers } from "./queries";
 
 export const metadata = { title: "Bookings" };
 
-const FILTERS = ["all", ...schema.bookingStatus.enumValues] as const;
-
 export default async function BookingsPage({ searchParams }: PageProps<"/admin/bookings">) {
   await requireAdmin();
-  const { status } = await searchParams;
-  const filter = FILTERS.find((f) => f === status) ?? "all";
+  const { deleted } = await searchParams;
   const db = await getDb();
   const { bookings: b, customers: c } = schema;
 
-  const rows = await db
-    .select({ booking: b, customer: c.name, phone: c.phone })
-    .from(b)
-    .innerJoin(c, eq(b.customerId, c.id))
-    .where(filter === "all" ? undefined : eq(b.status, filter))
-    .orderBy(desc(b.date))
-    .limit(200);
+  const [list, blockers] = await Promise.all([
+    db
+      .select({ booking: b, customer: c.name, phone: c.phone })
+      .from(b)
+      .innerJoin(c, eq(b.customerId, c.id))
+      .orderBy(desc(b.date))
+      .limit(1000),
+    bookingBlockers(),
+  ]);
+
+  const today = mauritiusDate();
+  const live = list.filter((r) => r.booking.status !== "cancelled");
+  const upcoming = live.filter((r) => r.booking.date >= today);
+  const pending = live.filter((r) => r.booking.status === "pending").length;
+  const unpaidDone = live.filter((r) => r.booking.status === "completed" && r.booking.paymentStatus === "unpaid").length;
+
+  const rows: Row[] = list.map(({ booking: bk, customer, phone }) => ({
+    id: bk.id,
+    href: `/admin/bookings/${bk.id}`,
+    editHref: `/admin/bookings/${bk.id}/edit`,
+    canDelete: true,
+    deleteBlockedReason: blockers.get(bk.id) ?? null,
+    filter: bk.status,
+    cells: {
+      ref: { text: bk.ref, mono: true },
+      date: { text: shortDate(bk.date), sub: bk.timeSlot, sort: `${bk.date} ${bk.timeSlot}` },
+      customer: { text: customer, sub: phone },
+      service: { text: getService(bk.service)?.name.en ?? bk.service, sub: `${getTown(bk.town)?.name ?? bk.town} · ${label(bk.frequency)}` },
+      price: { text: mur(bk.estimateMur), sort: bk.estimateMur },
+      status: { text: label(bk.status), badge: BOOKING_TONE_NAME[bk.status] },
+      payment: { text: label(bk.paymentStatus), badge: PAYMENT_TONE_NAME[bk.paymentStatus] },
+    },
+  }));
 
   return (
     <>
-      <PageHeader title="Bookings" subtitle="Newest dates first" />
-      <div className="mb-4 flex gap-2 overflow-x-auto">
-        {FILTERS.map((f) => (
-          <Link
-            key={f}
-            href={f === "all" ? "/admin/bookings" : `/admin/bookings?status=${f}`}
-            className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium ${filter === f ? "bg-ink text-white" : "bg-white text-ink-soft hover:text-ink"}`}
-          >
-            {label(f)}
-          </Link>
-        ))}
+      <PageHeader title="Bookings" subtitle="Every job, from the website and from the office">
+        <NewButton href="/admin/bookings/new" label="New booking" />
+      </PageHeader>
+
+      {deleted && <p role="status" className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">Booking deleted.</p>}
+
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Upcoming jobs" value={String(upcoming.length)} note={`worth ${mur(upcoming.reduce((s, r) => s + r.booking.estimateMur, 0))}`} icon="calendar" color="navy" />
+        <StatCard label="Awaiting confirmation" value={String(pending)} note="pending bookings" icon="clock" color="amber" />
+        <StatCard label="Finished, not paid" value={String(unpaidDone)} note="completed jobs still unpaid" icon="wallet" color="rose" href="/admin/invoices" />
+        <StatCard label="All bookings" value={String(list.length)} note={`${list.length - live.length} cancelled`} icon="board" color="sky" />
       </div>
-      {rows.length === 0 ? (
-        <Empty>No bookings here yet.</Empty>
-      ) : (
-        <div className="card overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
-              <tr>
-                <th className="p-3 font-medium">Ref</th>
-                <th className="p-3 font-medium">Date</th>
-                <th className="p-3 font-medium">Customer</th>
-                <th className="p-3 font-medium">Service</th>
-                <th className="p-3 text-right font-medium">Estimate</th>
-                <th className="p-3 font-medium">Status</th>
-                <th className="p-3 font-medium">Payment</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {rows.map(({ booking, customer, phone }) => (
-                <tr key={booking.id} className="hover:bg-surface-alt">
-                  <td className="p-3 font-mono text-xs">
-                    <Link href={`/admin/bookings/${booking.id}`} className="font-semibold text-brand-strong hover:underline">{booking.ref}</Link>
-                  </td>
-                  <td className="p-3 whitespace-nowrap">{shortDate(booking.date)} · {booking.timeSlot}</td>
-                  <td className="p-3">
-                    <p className="font-medium">{customer}</p>
-                    <p className="text-xs text-ink-soft">{phone}</p>
-                  </td>
-                  <td className="p-3">
-                    <p>{getService(booking.service)?.name.en}</p>
-                    <p className="text-xs text-ink-soft">{getTown(booking.town)?.name} · {label(booking.frequency)}</p>
-                  </td>
-                  <td className="p-3 text-right tabular-nums">{mur(booking.estimateMur)}</td>
-                  <td className="p-3"><BookingBadge status={booking.status} /></td>
-                  <td className="p-3"><PaymentBadge status={booking.paymentStatus} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+
+      <DataTable
+        columns={[
+          { key: "ref", label: "Ref" },
+          { key: "date", label: "Date" },
+          { key: "customer", label: "Customer" },
+          { key: "service", label: "Service", hideOnMobile: true },
+          { key: "price", label: "Price", align: "right" },
+          { key: "status", label: "Status" },
+          { key: "payment", label: "Payment", hideOnMobile: true },
+        ]}
+        rows={rows}
+        filters={schema.bookingStatus.enumValues.map((s) => ({ value: s, label: label(s) }))}
+        defaultSort={{ key: "date", dir: "desc" }}
+        searchPlaceholder="Search ref, customer, phone, service, town"
+        empty="No bookings yet. Website bookings appear here, or add one with New booking."
+        deleteAction={deleteBooking}
+        deleteNoun="booking"
+      />
     </>
   );
 }

@@ -65,7 +65,8 @@ export const leadStatus = pgEnum("lead_status", [
 export const customers = pgTable("customers", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  email: text("email").notNull().unique(),
+  // Optional for customers the office adds by phone; website bookings always have one.
+  email: text("email").unique(),
   phone: text("phone").notNull(),
   address: text("address"),
   town: text("town"),

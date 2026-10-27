@@ -9,11 +9,15 @@ import en from "@/dictionaries/en";
 import { BookingBadge, PageHeader, PaymentBadge, label, mur, shortDate } from "../../ui";
 import { updateBooking } from "../../actions";
 import { createForBooking } from "../../invoices/actions";
+import { deleteBooking } from "../actions";
+import { bookingDeleteBlocker } from "../queries";
+import { DeleteButton } from "../../delete-button";
+import { Icon } from "@/components/icons";
 import { hoursLabel, jobMinutes, mondayOf } from "@/lib/schedule";
 
 export const metadata = { title: "Booking" };
 
-export default async function BookingDetail({ params }: PageProps<"/admin/bookings/[id]">) {
+export default async function BookingDetail({ params, searchParams }: PageProps<"/admin/bookings/[id]">) {
   await requireAdmin();
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
@@ -26,6 +30,8 @@ export default async function BookingDetail({ params }: PageProps<"/admin/bookin
     .limit(1);
   if (!row) notFound();
   const { booking, customer } = row;
+  const { saved } = await searchParams;
+  const blocker = await bookingDeleteBlocker(booking.id);
   const payments = await db
     .select()
     .from(schema.payments)
@@ -55,13 +61,18 @@ export default async function BookingDetail({ params }: PageProps<"/admin/bookin
     <>
       <Link href="/admin/bookings" className="mb-3 inline-block text-sm text-ink-soft hover:text-ink">← Bookings</Link>
       <PageHeader title={`Booking ${booking.ref}`} subtitle={`Created ${shortDate(booking.createdAt)}`}>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <BookingBadge status={booking.status} />
           <PaymentBadge status={booking.paymentStatus} />
+          <Link href={`/admin/bookings/${booking.id}/edit`} className="btn-secondary min-h-10 gap-1.5 px-4 text-sm">
+            <Icon name="pencil" width={16} height={16} /> Edit
+          </Link>
+          <DeleteButton action={deleteBooking} id={booking.id} noun="booking" blockedReason={blocker} extra={{ from: "detail" }} />
         </div>
       </PageHeader>
+      {saved && <p role="status" className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">Booking saved.</p>}
 
-      <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.4fr_1fr]">
         <section className="card divide-y divide-line">
           <Item label="Service" value={`${getService(booking.service)?.name.en} · ${label(booking.frequency)}`} />
           <Item label="When" value={`${shortDate(booking.date)} at ${booking.timeSlot} · ${hoursLabel(jobMinutes(booking))}`} />
@@ -80,7 +91,7 @@ export default async function BookingDetail({ params }: PageProps<"/admin/bookin
             <h2 className="mb-2 font-semibold">Customer</h2>
             <Link href={`/admin/customers/${customer.id}`} className="font-medium text-brand-strong hover:underline">{customer.name}</Link>
             <p className="text-sm"><a href={`tel:${customer.phone}`} className="hover:underline">{customer.phone}</a></p>
-            <p className="text-sm"><a href={`mailto:${customer.email}`} className="hover:underline">{customer.email}</a></p>
+            {customer.email && <p className="text-sm"><a href={`mailto:${customer.email}`} className="hover:underline">{customer.email}</a></p>}
             <a href={whatsapp} target="_blank" rel="noopener" className="btn-secondary mt-3 min-h-10 w-full text-sm">Message on WhatsApp</a>
           </section>
 

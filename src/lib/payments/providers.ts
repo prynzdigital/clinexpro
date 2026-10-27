@@ -11,7 +11,7 @@ export type CheckoutRequest = {
   bookingRef: string;
   amountMur: number;
   lang: Locale;
-  customer: { name: string; email: string; phone: string };
+  customer: { name: string; email: string | null; phone: string };
   /** Absolute site origin of this request, for return and webhook URLs. */
   origin: string;
 };

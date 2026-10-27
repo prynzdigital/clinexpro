@@ -3,62 +3,76 @@ import { getDb, schema } from "@/db";
 import { requireAdmin } from "@/lib/auth";
 import en from "@/dictionaries/en";
 import { getService } from "@/content/services";
-import { Empty, LeadBadge, PageHeader, label, shortDate } from "../ui";
-import { updateLeadStatus } from "../actions";
+import { LEAD_TONE_NAME, NewButton, PageHeader, StatCard, label, shortDate } from "../ui";
+import { DataTable, type Row } from "../data-table";
+import { deleteLead } from "./actions";
 
 export const metadata = { title: "Business leads" };
 
-export default async function LeadsPage() {
+const SOURCES: Record<string, string> = { "home-request": "Home page", "business-page": "Business page", office: "Office" };
+
+export default async function LeadsPage({ searchParams }: PageProps<"/admin/leads">) {
   await requireAdmin();
+  const { saved, deleted } = await searchParams;
   const db = await getDb();
-  const leads = await db.select().from(schema.leads).orderBy(desc(schema.leads.createdAt)).limit(200);
+  const leads = await db.select().from(schema.leads).orderBy(desc(schema.leads.createdAt)).limit(2000);
+
+  const by = (s: string) => leads.filter((l) => l.status === s).length;
+  const decided = by("won") + by("lost");
+
+  const rows: Row[] = leads.map((lead) => ({
+    id: lead.id,
+    href: `/admin/leads/${lead.id}`,
+    editHref: `/admin/leads/${lead.id}`,
+    canDelete: true,
+    filter: lead.status,
+    cells: {
+      company: { text: lead.company, sub: en.business.sectors[lead.sector as keyof typeof en.business.sectors] ?? lead.sector },
+      contact: { text: lead.contactName, sub: lead.phone },
+      need: {
+        text: lead.service ? (getService(lead.service)?.name.en ?? lead.service) : "Not specified",
+        sub: [lead.town, lead.preferredDate && `start ${shortDate(lead.preferredDate)}`].filter(Boolean).join(" · ") || undefined,
+      },
+      source: { text: SOURCES[lead.source] ?? lead.source },
+      received: { text: shortDate(lead.createdAt), sort: lead.createdAt.toISOString() },
+      status: { text: label(lead.status), badge: LEAD_TONE_NAME[lead.status] },
+    },
+  }));
 
   return (
     <>
-      <PageHeader title="Business leads" subtitle="Business enquiries and booking requests from the website" />
-      {leads.length === 0 ? (
-        <Empty>No enquiries yet.</Empty>
-      ) : (
-        <ul className="space-y-3">
-          {leads.map((lead) => (
-            <li key={lead.id} className="card grid gap-4 p-5 lg:grid-cols-[1fr_auto]">
-              <div className="min-w-0 space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="font-semibold">{lead.company}</h2>
-                  <LeadBadge status={lead.status} />
-                  <span className="rounded-full bg-surface-alt px-2.5 py-0.5 text-xs font-medium text-ink-soft">
-                    {lead.source === "home-request" ? "Booking request" : "Business page"}
-                  </span>
-                </div>
-                {lead.source === "home-request" && (
-                  <p className="text-sm">
-                    <span className="font-medium">{lead.service ? getService(lead.service)?.name.en : "Service not specified"}</span>
-                    {lead.address && <> · {lead.address}</>}
-                    {" · "}start {lead.preferredDate ? shortDate(lead.preferredDate) : "flexible"}
-                    {lead.contactTime && <> · call in the {lead.contactTime}</>}
-                  </p>
-                )}
-                <p className="text-sm text-ink-soft">
-                  {en.business.sectors[lead.sector as keyof typeof en.business.sectors] ?? lead.sector}
-                  {lead.town ? ` · ${lead.town}` : ""} · received {shortDate(lead.createdAt)}
-                </p>
-                <p className="text-sm">
-                  {lead.contactName} · <a href={`tel:${lead.phone}`} className="hover:underline">{lead.phone}</a> ·{" "}
-                  <a href={`mailto:${lead.email}`} className="hover:underline">{lead.email}</a>
-                </p>
-                {lead.message && <p className="whitespace-pre-line pt-1 text-sm text-ink-soft">{lead.message}</p>}
-              </div>
-              <form action={updateLeadStatus} className="flex items-center gap-2 self-start">
-                <input type="hidden" name="id" value={lead.id} />
-                <select name="status" defaultValue={lead.status} className="field py-2 text-sm" aria-label="Lead status">
-                  {schema.leadStatus.enumValues.map((s) => <option key={s} value={s}>{label(s)}</option>)}
-                </select>
-                <button type="submit" className="btn-secondary min-h-10 px-4 text-sm">Save</button>
-              </form>
-            </li>
-          ))}
-        </ul>
+      <PageHeader title="Business leads" subtitle="Enquiries and booking requests, from the website and the office">
+        <NewButton href="/admin/leads/new" label="New lead" />
+      </PageHeader>
+
+      {(saved || deleted) && (
+        <p role="status" className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">{deleted ? "Lead deleted." : "Lead saved."}</p>
       )}
+
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="New, not yet contacted" value={String(by("new"))} icon="alert" color="amber" />
+        <StatCard label="In progress" value={String(by("contacted") + by("site_visit"))} note={`${by("site_visit")} site visits`} icon="clock" color="sky" />
+        <StatCard label="Won" value={String(by("won"))} note={decided ? `${Math.round((by("won") / decided) * 100)}% of decided leads` : undefined} icon="check" color="emerald" />
+        <StatCard label="All leads" value={String(leads.length)} icon="briefcase" color="navy" />
+      </div>
+
+      <DataTable
+        columns={[
+          { key: "company", label: "Company" },
+          { key: "contact", label: "Contact" },
+          { key: "need", label: "Need", hideOnMobile: true },
+          { key: "source", label: "Source", hideOnMobile: true },
+          { key: "received", label: "Received" },
+          { key: "status", label: "Status" },
+        ]}
+        rows={rows}
+        filters={schema.leadStatus.enumValues.map((s) => ({ value: s, label: label(s) }))}
+        defaultSort={{ key: "received", dir: "desc" }}
+        searchPlaceholder="Search company, contact, phone, town"
+        empty="No leads yet. Website enquiries appear here, or add one with New lead."
+        deleteAction={deleteLead}
+        deleteNoun="lead"
+      />
     </>
   );
 }

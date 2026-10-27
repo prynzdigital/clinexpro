@@ -9,6 +9,7 @@ import { getTown } from "@/content/towns";
 import { getService } from "@/content/services";
 import { LOCALES } from "@/lib/i18n";
 import { alertNewBooking } from "@/lib/notify";
+import { bookingRef } from "@/lib/booking-ref";
 
 const BookingInput = z.object({
   lang: z.enum(LOCALES),
@@ -36,13 +37,6 @@ function bookableDate(iso: string) {
   const tomorrow = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 1);
   const limit = tomorrow + 90 * 864e5;
   return !Number.isNaN(d.getTime()) && d.getTime() >= tomorrow && d.getTime() <= limit && d.getUTCDay() !== 0;
-}
-
-function bookingRef() {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let out = "CP-";
-  for (const byte of crypto.getRandomValues(new Uint8Array(6))) out += alphabet[byte % alphabet.length];
-  return out;
 }
 
 export async function createBooking(raw: BookingInput): Promise<BookingResult> {

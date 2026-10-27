@@ -34,14 +34,6 @@ export async function updateCustomerNotes(formData: FormData) {
   revalidatePath(`/admin/customers/${input.id}`);
 }
 
-export async function updateLeadStatus(formData: FormData) {
-  await requireAdmin();
-  const input = z.object({ id, status: z.enum(schema.leadStatus.enumValues) }).parse(Object.fromEntries(formData));
-  const db = await getDb();
-  await db.update(schema.leads).set({ status: input.status }).where(eq(schema.leads.id, input.id));
-  revalidatePath("/admin", "layout");
-}
-
 export async function logout() {
   await endSession();
   redirect("/admin/login");

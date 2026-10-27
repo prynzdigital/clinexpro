@@ -42,7 +42,7 @@ export default async function InvoicePage({ params }: PageProps<"/admin/invoices
       </PageHeader>
 
       {invoice.status === "draft" ? (
-        <div className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.3fr_1fr]">
           <DraftEditor invoice={invoice} lines={lines} vatRateBp={invoice.vatRateBp} />
           <aside className="space-y-3 text-sm">
             <div className="card space-y-2 p-5">
@@ -55,7 +55,7 @@ export default async function InvoicePage({ params }: PageProps<"/admin/invoices
           </aside>
         </div>
       ) : (
-        <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.5fr_1fr]">
           <div className="card overflow-hidden">
             <InvoiceDocument invoice={invoice} lines={lines} paid={paid} paidCents={paidCents} balanceCents={balanceCents} seller={settings} />
           </div>

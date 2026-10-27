@@ -101,3 +101,15 @@ export async function removeAppAccess(formData: FormData) {
     .where(eq(schema.staff.id, id.data));
   revalidatePath("/admin/staff");
 }
+
+/** Only people never put on a job; anyone with job history is set to Inactive instead. */
+export async function deleteStaff(formData: FormData) {
+  await requireAdmin();
+  const id = z.coerce.number().int().positive().safeParse(formData.get("id"));
+  if (!id.success) return;
+  const db = await getDb();
+  const [{ n }] = await db.select({ n: count() }).from(schema.bookingAssignments).where(eq(schema.bookingAssignments.staffId, id.data));
+  if (n) return;
+  await db.delete(schema.staff).where(eq(schema.staff.id, id.data));
+  revalidatePath("/admin", "layout");
+}

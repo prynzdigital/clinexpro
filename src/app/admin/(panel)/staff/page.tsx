@@ -1,8 +1,9 @@
-import { asc, desc } from "drizzle-orm";
+import { asc, count, desc } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { requireAdmin } from "@/lib/auth";
-import { Empty, PageHeader, shortDate } from "../ui";
-import { addStaff, updateStaff } from "./actions";
+import { Empty, PageHeader, StatCard, shortDate } from "../ui";
+import { DeleteButton } from "../delete-button";
+import { addStaff, deleteStaff, updateStaff } from "./actions";
 import { AppAccess } from "./app-access";
 
 export const metadata = { title: "Staff" };
@@ -11,11 +12,22 @@ export default async function StaffPage() {
   await requireAdmin();
   const db = await getDb();
   const people = await db.select().from(schema.staff).orderBy(desc(schema.staff.active), asc(schema.staff.name));
+  const jobs = await db
+    .select({ staffId: schema.bookingAssignments.staffId, n: count() })
+    .from(schema.bookingAssignments)
+    .groupBy(schema.bookingAssignments.staffId);
+  const jobCount = new Map(jobs.map((j) => [j.staffId, j.n]));
+  const active = people.filter((p) => p.active);
 
   return (
     <>
       <PageHeader title="Staff" subtitle="Cleaners and supervisors you can put on jobs" />
-      <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard label="Active staff" value={String(active.length)} note={`${people.length - active.length} inactive`} icon="badge" color="navy" />
+        <StatCard label="Using the staff app" value={String(active.filter((p) => p.pinHash).length)} note="have a PIN" icon="phone" color="emerald" />
+        <StatCard label="Jobs assigned" value={String(jobs.reduce((s, j) => s + j.n, 0))} note="all time" icon="board" color="orange" />
+      </div>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.5fr_1fr]">
         <section className="space-y-3">
           {people.length === 0 && <Empty>Add your cleaners to start planning jobs on the schedule.</Empty>}
           {people.map((p) => (
@@ -41,6 +53,15 @@ export default async function StaffPage() {
                 <button type="submit" className="btn-secondary min-h-11">Save</button>
               </form>
               <AppAccess id={p.id} name={p.name} hasPin={Boolean(p.pinHash)} active={p.active} lastLogin={p.lastLoginAt ? shortDate(p.lastLoginAt) : null} />
+              <div className="flex items-center justify-between gap-3 border-t border-line pt-3 text-sm">
+                <span className="text-ink-soft">{jobCount.get(p.id) ?? 0} job{jobCount.get(p.id) === 1 ? "" : "s"} assigned</span>
+                <DeleteButton
+                  action={deleteStaff}
+                  id={p.id}
+                  noun="person"
+                  blockedReason={jobCount.get(p.id) ? "They have job history. Set them to Inactive instead." : null}
+                />
+              </div>
             </div>
           ))}
         </section>

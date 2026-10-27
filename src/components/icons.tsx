@@ -27,6 +27,12 @@ const paths = {
   logout: "M15 4h4v16h-4M10 8l-4 4 4 4m-4-4h11",
   board: "M4 4h16v16H4zm0 5h16M9 9v11m5-11v11",
   receipt: "M6 3h12v18l-3-2-3 2-3-2-3 2zm3 5h6m-6 4h6m-6 4h3",
+  pencil: "M4 20h4L19 9l-4-4L4 16zm9-13 4 4",
+  trash: "M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v6m4-6v6",
+  plus: "M12 5v14M5 12h14",
+  wallet: "M3 7h15a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zm0 0 12-3v3m2 6h.01",
+  trend: "M3 17l6-6 4 4 8-8m0 0h-5m5 0v5",
+  alert: "M12 4 2 20h20zm0 6v4m0 3h.01",
   badge: "M4 5h16v14H4zm5 4.5a2 2 0 1 0 0 .01M6 16a3 3 0 0 1 6 0m3-6h3m-3 3h3",
 } as const;
 

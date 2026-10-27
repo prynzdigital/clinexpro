@@ -50,6 +50,13 @@
       "when": 1793063448897,
       "tag": "0006_invoicing",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793066706131,
+      "tag": "0007_optional_customer_email",
+      "breakpoints": true
     }
   ]
 }

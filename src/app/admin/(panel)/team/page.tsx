@@ -15,7 +15,7 @@ export default async function TeamPage() {
     <>
       <PageHeader title="Team" subtitle="Who can sign in to this dashboard, and what they can do" />
 
-      <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.5fr_1fr]">
         <section className="space-y-3">
           {members.map((m) => {
             const isYou = m.id === session.uid;

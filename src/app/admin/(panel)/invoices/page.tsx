@@ -1,12 +1,14 @@
-import Link from "next/link";
 import { and, asc, desc, eq, inArray, ne, notExists } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { requireAdmin } from "@/lib/auth";
 import { mauritiusDate } from "@/lib/dates";
 import { money, summarise } from "@/lib/invoices";
 import { getService } from "@/content/services";
-import { Empty, InvoiceBadge, PageHeader, label, shortDate } from "../ui";
-import { createForBooking, draftAllCompleted } from "./actions";
+import { PageHeader, StatCard, label, shortDate } from "../ui";
+import { DataTable, type Row, type Tone } from "../data-table";
+import { createForBooking, deleteDraft, draftAllCompleted } from "./actions";
+
+const STATE_TONE: Record<string, Tone> = { draft: "gray", unpaid: "amber", part_paid: "sky", overdue: "rose", paid: "emerald", void: "gray" };
 
 export const metadata = { title: "Invoices" };
 
@@ -14,15 +16,13 @@ const FILTERS = ["all", "draft", "unpaid", "overdue", "part_paid", "paid", "void
 
 export default async function InvoicesPage({ searchParams }: PageProps<"/admin/invoices">) {
   await requireAdmin();
-  const { status, created } = await searchParams;
-  const filter = FILTERS.find((f) => f === status) ?? "all";
+  const { created } = await searchParams;
   const db = await getDb();
   const { invoices: i, invoicePayments: p, bookings: b, customers: c } = schema;
 
   const all = await db.select().from(i).orderBy(desc(i.createdAt)).limit(500);
   const paid = all.length ? await db.select().from(p).where(inArray(p.invoiceId, all.map((x) => x.id))) : [];
   const rows = all.map((invoice) => ({ invoice, ...summarise(invoice, paid.filter((x) => x.invoiceId === invoice.id)) }));
-  const shown = filter === "all" ? rows : rows.filter((r) => r.state === filter);
 
   const live = rows.filter((r) => r.invoice.status === "issued");
   const outstanding = live.reduce((sum, r) => sum + Math.max(r.balanceCents, 0), 0);
@@ -39,7 +39,21 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/admin/i
     .orderBy(asc(b.date))
     .limit(50);
 
-  const counts = Object.fromEntries(FILTERS.map((f) => [f, f === "all" ? rows.length : rows.filter((r) => r.state === f).length]));
+  const tableRows: Row[] = rows.map(({ invoice, balanceCents, state }) => ({
+    id: invoice.id,
+    href: `/admin/invoices/${invoice.id}`,
+    canDelete: invoice.status === "draft",
+    filter: state,
+    cells: {
+      number: { text: invoice.number ?? "Draft", mono: Boolean(invoice.number), sort: invoice.number ?? `~${invoice.id}` },
+      customer: { text: invoice.billName, sub: invoice.billEmail ?? undefined },
+      issued: { text: invoice.issueDate ? shortDate(invoice.issueDate) : "—", sort: invoice.issueDate ?? "" },
+      due: { text: invoice.dueDate ? shortDate(invoice.dueDate) : "—", sort: invoice.dueDate ?? "" },
+      total: { text: money(invoice.totalCents), sort: invoice.totalCents },
+      balance: { text: invoice.status === "issued" ? money(balanceCents) : "—", sort: invoice.status === "issued" ? balanceCents : -1 },
+      status: { text: label(state), badge: STATE_TONE[state] },
+    },
+  }));
 
   return (
     <>
@@ -51,10 +65,10 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/admin/i
         </p>
       )}
 
-      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Stat label="Outstanding" value={money(outstanding)} />
-        <Stat label="Overdue" value={money(overdue)} tone={overdue ? "text-rose-700" : undefined} />
-        <Stat label="Received this month" value={money(receivedThisMonth)} />
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard label="Outstanding" value={money(outstanding)} icon="wallet" color="orange" />
+        <StatCard label="Overdue" value={money(overdue)} icon="alert" color={overdue ? "rose" : "emerald"} note={overdue ? "chase these first" : "nothing overdue"} />
+        <StatCard label="Received this month" value={money(receivedThisMonth)} icon="trend" color="emerald" />
       </div>
 
       {ready.length > 0 && (
@@ -83,52 +97,24 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/admin/i
         </section>
       )}
 
-      <div className="mb-4 flex gap-2 overflow-x-auto">
-        {FILTERS.map((f) => (
-          <Link
-            key={f}
-            href={f === "all" ? "/admin/invoices" : `/admin/invoices?status=${f}`}
-            className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium ${filter === f ? "bg-ink text-white" : "bg-white text-ink-soft hover:text-ink"}`}
-          >
-            {label(f)} <span className="opacity-70">{counts[f]}</span>
-          </Link>
-        ))}
-      </div>
-
-      {shown.length === 0 ? (
-        <Empty>{rows.length ? "No invoices in this list." : "No invoices yet. They start from finished jobs, or from a customer's page."}</Empty>
-      ) : (
-        <div className="card overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
-              <tr>
-                <th className="p-3 font-medium">Invoice</th>
-                <th className="p-3 font-medium">Customer</th>
-                <th className="p-3 font-medium">Issued</th>
-                <th className="p-3 font-medium">Due</th>
-                <th className="p-3 text-right font-medium">Total</th>
-                <th className="p-3 text-right font-medium">Balance</th>
-                <th className="p-3 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {shown.map(({ invoice, balanceCents, state }) => (
-                <tr key={invoice.id} className="hover:bg-surface-alt">
-                  <td className="p-3 font-medium">
-                    <Link href={`/admin/invoices/${invoice.id}`} className="text-brand-strong hover:underline">{invoice.number ?? "Draft"}</Link>
-                  </td>
-                  <td className="p-3">{invoice.billName}</td>
-                  <td className="p-3">{invoice.issueDate ? shortDate(invoice.issueDate) : "—"}</td>
-                  <td className="p-3">{invoice.dueDate ? shortDate(invoice.dueDate) : "—"}</td>
-                  <td className="p-3 text-right tabular-nums">{money(invoice.totalCents)}</td>
-                  <td className="p-3 text-right tabular-nums">{invoice.status === "issued" ? money(balanceCents) : "—"}</td>
-                  <td className="p-3"><InvoiceBadge state={state} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <DataTable
+        columns={[
+          { key: "number", label: "Invoice" },
+          { key: "customer", label: "Customer" },
+          { key: "issued", label: "Issued", hideOnMobile: true },
+          { key: "due", label: "Due", hideOnMobile: true },
+          { key: "total", label: "Total", align: "right" },
+          { key: "balance", label: "Balance", align: "right" },
+          { key: "status", label: "Status" },
+        ]}
+        rows={tableRows}
+        filters={FILTERS.filter((f) => f !== "all").map((f) => ({ value: f, label: label(f) }))}
+        defaultSort={{ key: "number", dir: "desc" }}
+        searchPlaceholder="Search number, customer, email"
+        empty="No invoices yet. They start from finished jobs, or from a customer's page."
+        deleteAction={deleteDraft}
+        deleteNoun="draft invoice"
+      />
 
       <section className="card mt-6 p-5">
         <h2 className="mb-1 font-semibold">Export for the accountant</h2>
@@ -147,14 +133,5 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/admin/i
         </form>
       </section>
     </>
-  );
-}
-
-function Stat({ label, value, tone }: { label: string; value: string; tone?: string }) {
-  return (
-    <div className="card p-4">
-      <p className="text-sm text-ink-soft">{label}</p>
-      <p className={`mt-1 text-2xl font-bold tabular-nums ${tone ?? ""}`}>{value}</p>
-    </div>
   );
 }
