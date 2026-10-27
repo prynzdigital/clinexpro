@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Icon, type IconName } from "@/components/icons";
 import { OfflineBar } from "./app-client";
+import { StaffBackdrop } from "./backdrop";
 
 const TABS: { href: string; label: string; icon: IconName; key: "today" | "week" | "me" }[] = [
   { href: "/staff", label: "Today", icon: "clock", key: "today" },
@@ -32,8 +33,10 @@ export function StaffShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto flex min-h-svh max-w-lg flex-col">
-      <header className="sticky top-0 z-20 bg-gradient-to-br from-[#0b2a41] to-navy px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5 text-white shadow-lg shadow-navy/20">
+    <div className="relative isolate mx-auto flex min-h-svh max-w-lg flex-col">
+      <StaffBackdrop tone="light" />
+      {/* See-through navy: the photo shows behind the header. */}
+      <header className="sticky top-0 z-20 bg-navy/75 px-5 backdrop-blur-md pt-[max(1rem,env(safe-area-inset-top))] pb-5 text-white shadow-lg shadow-navy/20">
         <div className="flex items-center gap-3">
           <span className="grid size-11 shrink-0 place-items-center rounded-full text-sm font-bold ring-2 ring-white/20" style={{ background: me.color }} aria-hidden>
             {initials(me.name)}

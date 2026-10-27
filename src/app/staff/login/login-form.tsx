@@ -51,7 +51,7 @@ export function StaffLoginForm() {
     <form ref={form} action={action} className="flex flex-1 flex-col">
       <label className="block">
         <span className="mb-1.5 block text-sm font-medium text-white/80">Mobile number</span>
-        <span className="flex items-center gap-2 rounded-2xl bg-white/10 px-4 ring-1 ring-white/15 focus-within:ring-2 focus-within:ring-accent">
+        <span className="flex items-center gap-2 rounded-2xl bg-white/10 px-4 ring-1 ring-white/15 backdrop-blur-md focus-within:ring-2 focus-within:ring-accent">
           <Icon name="phone" width={18} height={18} className="text-white/60" />
           <input
             ref={phone}
@@ -86,7 +86,7 @@ export function StaffLoginForm() {
             type="button"
             onClick={() => press(k)}
             aria-label={k === "back" ? "Delete last digit" : k === "clear" ? "Clear PIN" : k}
-            className={`grid h-16 place-items-center rounded-2xl text-2xl font-semibold transition active:scale-95 ${k === "back" || k === "clear" ? "text-base text-white/70" : "bg-white/10 text-white hover:bg-white/15"}`}
+            className={`grid h-16 place-items-center rounded-2xl text-2xl font-semibold transition active:scale-95 ${k === "back" || k === "clear" ? "text-base text-white/70" : "bg-white/10 text-white ring-1 ring-white/10 backdrop-blur-md hover:bg-white/15"}`}
           >
             {k === "back" ? <Icon name="arrow" width={22} height={22} className="rotate-180" /> : k === "clear" ? "Clear" : k}
           </button>

@@ -25,12 +25,12 @@ export default async function StaffWeek() {
         const list = jobs.filter((j) => j.date === d);
         return (
           <section key={d} aria-label={LONG_DAYS[date.getUTCDay()]}>
-            <h2 className="mb-2 flex items-baseline justify-between px-1">
+            <h2 className="mb-2 flex items-baseline justify-between rounded-xl bg-white/70 px-3 py-1.5 backdrop-blur-sm">
               <span className="font-bold">{d === today ? "Today" : LONG_DAYS[date.getUTCDay()]}</span>
               <span className="text-sm text-ink-soft">{date.getUTCDate()} {MONTHS[date.getUTCMonth()]}</span>
             </h2>
             {list.length === 0 ? (
-              <p className="rounded-2xl border border-dashed border-line px-4 py-3 text-sm text-ink-soft">Free</p>
+              <p className="rounded-2xl border border-dashed border-ink/15 bg-white/60 px-4 py-3 text-sm text-ink-soft backdrop-blur-sm">Free</p>
             ) : (
               <ul className="space-y-2">
                 {list.map((j) => (

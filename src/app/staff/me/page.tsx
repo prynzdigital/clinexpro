@@ -41,7 +41,7 @@ export default async function StaffMe() {
         </ul>
       </section>
 
-      <p className="px-2 text-sm text-ink-soft">Forgot your PIN or changed phone? Ask the office for a new PIN; the old one stops working straight away.</p>
+      <p className="rounded-2xl bg-white/70 px-4 py-3 text-sm text-ink-soft backdrop-blur-sm">Forgot your PIN or changed phone? Ask the office for a new PIN; the old one stops working straight away.</p>
 
       <SignOutButton action={staffLogout} />
     </StaffShell>

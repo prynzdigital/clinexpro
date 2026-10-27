@@ -27,7 +27,7 @@ export const viewport: Viewport = {
 export default function StaffRootLayout({ children }: LayoutProps<"/staff">) {
   return (
     <html lang="en" className={`${roboto.variable} h-full antialiased`}>
-      <body className="min-h-full bg-[#eef1f5] font-sans text-ink">
+      <body className="min-h-full bg-navy font-sans text-ink">
         <StaffPwa />
         {children}
       </body>

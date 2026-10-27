@@ -2,7 +2,7 @@
 // Pages: network first; with no signal, the last copy of that page (so a
 // cleaner can still see today's jobs and addresses). Build assets: cache first.
 // Signing out deletes the page copies (see the staff app's sign-out button).
-const VERSION = "v1";
+const VERSION = "v2";
 const ASSETS = `clinex-staff-assets-${VERSION}`;
 const PAGES = "clinex-staff-pages";
 
@@ -51,7 +51,8 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/") || url.pathname.startsWith("/brand/")) {
+  // Build assets, icons and resized images (the app's photo background) never change for a given URL.
+  if (url.pathname.startsWith("/_next/static/") || url.pathname === "/_next/image" || url.pathname.startsWith("/icons/") || url.pathname.startsWith("/brand/")) {
     event.respondWith(
       caches.match(request).then(
         (hit) =>
