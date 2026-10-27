@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, ne } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { requireAdmin } from "@/lib/auth";
 import { getService } from "@/content/services";
@@ -8,6 +8,7 @@ import { getTown } from "@/content/towns";
 import en from "@/dictionaries/en";
 import { BookingBadge, PageHeader, PaymentBadge, label, mur, shortDate } from "../../ui";
 import { updateBooking } from "../../actions";
+import { createForBooking } from "../../invoices/actions";
 import { hoursLabel, jobMinutes, mondayOf } from "@/lib/schedule";
 
 export const metadata = { title: "Booking" };
@@ -30,6 +31,10 @@ export default async function BookingDetail({ params }: PageProps<"/admin/bookin
     .from(schema.payments)
     .where(eq(schema.payments.bookingId, booking.id))
     .orderBy(desc(schema.payments.createdAt));
+  const [invoice] = await db
+    .select({ id: schema.invoices.id, number: schema.invoices.number })
+    .from(schema.invoices)
+    .where(and(eq(schema.invoices.bookingId, booking.id), ne(schema.invoices.status, "void")));
   const team = await db
     .select({
       id: schema.staff.id,
@@ -101,6 +106,18 @@ export default async function BookingDetail({ params }: PageProps<"/admin/bookin
               </ul>
             ) : (
               <p className="text-sm text-amber-800">No cleaner assigned yet.</p>
+            )}
+          </section>
+
+          <section className="card flex items-center justify-between gap-3 p-5">
+            <h2 className="font-semibold">Invoice</h2>
+            {invoice ? (
+              <Link href={`/admin/invoices/${invoice.id}`} className="text-sm font-medium text-brand-strong hover:underline">{invoice.number ?? "Draft"} →</Link>
+            ) : (
+              <form action={createForBooking}>
+                <input type="hidden" name="bookingId" value={booking.id} />
+                <button type="submit" className="btn-secondary min-h-10 text-sm">Create invoice</button>
+              </form>
             )}
           </section>
 

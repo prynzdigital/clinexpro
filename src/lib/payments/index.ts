@@ -4,6 +4,7 @@ import { after } from "next/server";
 import { getDb, schema } from "@/db";
 import type { Locale } from "@/lib/i18n";
 import { alertPayment } from "@/lib/notify";
+import { creditBookingInvoice } from "@/lib/invoices";
 import { getProvider } from "./providers";
 
 export { getProvider } from "./providers";
@@ -75,6 +76,8 @@ export async function markPaymentSucceeded(paymentId: number, outcome: Outcome =
   if (!result) return false;
 
   const { payment, ref, name } = result;
+  // If the booking was already invoiced, the payment counts against that invoice.
+  after(() => creditBookingInvoice(payment.bookingId));
   after(() =>
     alertPayment({
       bookingId: payment.bookingId,

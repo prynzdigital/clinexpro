@@ -36,6 +36,9 @@ export async function proxy(request: NextRequest) {
     return;
   }
 
+  // Customer invoice links: public (the token is the key), no language prefix.
+  if (pathname.startsWith("/i/")) return;
+
   const hasLocale = LOCALES.some((l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`));
   if (hasLocale) return;
 

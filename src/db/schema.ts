@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   integer,
@@ -40,6 +41,17 @@ export const paymentAttemptStatus = pgEnum("payment_attempt_status", [
   "succeeded",
   "failed",
   "cancelled",
+]);
+
+export const invoiceStatus = pgEnum("invoice_status", ["draft", "issued", "void"]);
+
+export const paymentMethod = pgEnum("payment_method", [
+  "cash",
+  "bank_transfer",
+  "juice",
+  "card_online",
+  "cheque",
+  "other",
 ]);
 
 export const leadStatus = pgEnum("lead_status", [
@@ -163,6 +175,76 @@ export const bookingAssignments = pgTable(
   (t) => [primaryKey({ columns: [t.bookingId, t.staffId] }), index("booking_assignments_staff_idx").on(t.staffId)],
 );
 
+// Invoices. Amounts are in cents (MUR × 100) so VAT is exact. A draft has no
+// number and can be edited or deleted; issuing assigns the next number and
+// locks it; mistakes are voided (kept, with a reason), never deleted.
+export const invoices = pgTable(
+  "invoices",
+  {
+    id: serial("id").primaryKey(),
+    number: text("number").unique(),
+    // Unguessable id for the customer's link (/i/<token>).
+    token: text("token").notNull().unique(),
+    customerId: integer("customer_id")
+      .notNull()
+      .references(() => customers.id),
+    bookingId: integer("booking_id").references(() => bookings.id),
+    status: invoiceStatus("status").notNull().default("draft"),
+    // Bill-to details are copied in, so later customer edits don't change issued invoices.
+    billName: text("bill_name").notNull(),
+    billEmail: text("bill_email"),
+    billAddress: text("bill_address"),
+    lang: text("lang").notNull().default("en"),
+    issueDate: date("issue_date"),
+    dueDate: date("due_date"),
+    // VAT rate in basis points (1500 = 15%); line prices include VAT.
+    vatRateBp: integer("vat_rate_bp").notNull().default(0),
+    totalCents: integer("total_cents").notNull().default(0),
+    vatCents: integer("vat_cents").notNull().default(0),
+    notes: text("notes"),
+    voidReason: text("void_reason"),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  // One live invoice per booking; a voided one doesn't block re-invoicing.
+  (t) => [uniqueIndex("invoices_booking_idx").on(t.bookingId).where(sql`${t.status} <> 'void'`)],
+);
+
+export const invoiceLines = pgTable("invoice_lines", {
+  id: serial("id").primaryKey(),
+  invoiceId: integer("invoice_id")
+    .notNull()
+    .references(() => invoices.id, { onDelete: "cascade" }),
+  position: integer("position").notNull().default(0),
+  description: text("description").notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  unitCents: integer("unit_cents").notNull(),
+});
+
+// Money received against an invoice: entered by the office, or copied from a
+// successful online payment (paymentId set, so it is only counted once).
+export const invoicePayments = pgTable("invoice_payments", {
+  id: serial("id").primaryKey(),
+  invoiceId: integer("invoice_id")
+    .notNull()
+    .references(() => invoices.id),
+  amountCents: integer("amount_cents").notNull(),
+  method: paymentMethod("method").notNull(),
+  receivedOn: date("received_on").notNull(),
+  reference: text("reference"),
+  paymentId: integer("payment_id")
+    .unique()
+    .references(() => payments.id),
+  recordedBy: integer("recorded_by").references(() => adminUsers.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Next invoice number per year; updated inside the issuing transaction so numbers never skip or repeat.
+export const invoiceCounters = pgTable("invoice_counters", {
+  year: integer("year").primaryKey(),
+  last: integer("last").notNull(),
+});
+
 export const adminUsers = pgTable("admin_users", {
   id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
@@ -185,3 +267,6 @@ export type Lead = typeof leads.$inferSelect;
 export type Payment = typeof payments.$inferSelect;
 export type AdminUser = typeof adminUsers.$inferSelect;
 export type Staff = typeof staff.$inferSelect;
+export type Invoice = typeof invoices.$inferSelect;
+export type InvoiceLine = typeof invoiceLines.$inferSelect;
+export type InvoicePayment = typeof invoicePayments.$inferSelect;

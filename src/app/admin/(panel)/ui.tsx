@@ -30,6 +30,16 @@ function Badge({ tone, children }: { tone: string; children: React.ReactNode }) 
 
 export const BookingBadge = ({ status }: { status: Booking["status"] }) => <Badge tone={BOOKING_TONE[status]}>{label(status)}</Badge>;
 export const PaymentBadge = ({ status }: { status: Booking["paymentStatus"] }) => <Badge tone={PAYMENT_TONE[status]}>{label(status)}</Badge>;
+const INVOICE_TONE: Record<string, string> = {
+  draft: "bg-zinc-200 text-zinc-700",
+  unpaid: "bg-amber-100 text-amber-800",
+  part_paid: "bg-sky-100 text-sky-800",
+  overdue: "bg-rose-100 text-rose-800",
+  paid: "bg-emerald-100 text-emerald-800",
+  void: "bg-zinc-200 text-zinc-500 line-through",
+};
+export const InvoiceBadge = ({ state }: { state: string }) => <Badge tone={INVOICE_TONE[state] ?? INVOICE_TONE.draft}>{label(state)}</Badge>;
+
 export const LeadBadge = ({ status }: { status: Lead["status"] }) => <Badge tone={LEAD_TONE[status]}>{label(status)}</Badge>;
 
 export const mur = (n: number) =>

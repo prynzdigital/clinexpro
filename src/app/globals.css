@@ -112,3 +112,11 @@ body {
     to { transform: scale(1.12); }
   }
 }
+
+/* Printed invoices (/i/<token>): A4 with sensible margins. */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+}

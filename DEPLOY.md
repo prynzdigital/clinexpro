@@ -109,6 +109,27 @@ for a gateway.
   Options in Mauritius include MCB (MIPS / Juice), Peach Payments and Paywise.
   The choice depends on the client's bank and fees.
 
+## 5. Invoices
+
+Invoices work without any setup. These settings add the company's details and
+VAT. Ask the client (or their accountant) for them:
+
+| Variable | Value |
+| --- | --- |
+| `BUSINESS_BRN` | Business Registration Number, printed on invoices |
+| `INVOICE_PAYMENT_INSTRUCTIONS` | Bank account and Juice number, printed on unpaid invoices. Use `
+` for new lines |
+| `INVOICE_DUE_DAYS` | Days to pay, default 7 |
+| `VAT_RATE_PERCENT` | Only if VAT-registered: `15`. Prices are treated as VAT-inclusive |
+| `VAT_NUMBER` | Only if VAT-registered |
+
+Changing VAT affects new invoices only. Issued invoices keep the rate they were issued with.
+
+**If Clinex Pro is VAT-registered,** the MRA's e-invoicing rules may require
+each invoice to be sent to the MRA system for an approval number and QR code.
+That needs MRA credentials and is not built yet. Ask the accountant whether it
+applies before relying on these invoices for VAT.
+
 ## Checklist
 
 - [ ] Neon connected, `SESSION_SECRET` and `NEXT_PUBLIC_SITE_URL` set
@@ -117,4 +138,5 @@ for a gateway.
 - [ ] WhatsApp templates approved, `WHATSAPP_*` set
 - [ ] `/api/health` shows `"ok": true`
 - [ ] One real test booking: team email + WhatsApp received, customer email received
+- [ ] Invoice details set (`BUSINESS_BRN`, payment instructions; VAT if registered)
 - [ ] Domain `clinexpro.net` pointed to Vercel (Settings → Domains)

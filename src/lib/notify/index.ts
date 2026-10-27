@@ -116,6 +116,53 @@ export async function alertPayment(p: PaymentAlert) {
   ]);
 }
 
+export type InvoiceMail = {
+  number: string;
+  token: string;
+  lang: string;
+  billName: string;
+  billEmail: string | null;
+  totalCents: number;
+  balanceCents: number;
+  dueDate: string | null;
+};
+
+/** The customer's invoice, as a link to the printable page (no attachment needed). */
+export async function sendInvoiceEmail(inv: InvoiceMail) {
+  if (!inv.billEmail) return;
+  const fr = inv.lang === "fr";
+  const amount = (cents: number) =>
+    new Intl.NumberFormat(fr ? "fr-MU" : "en-MU", { style: "currency", currency: "MUR", minimumFractionDigits: 2 }).format(cents / 100);
+  const due = inv.dueDate && longDate(inv.dueDate, fr ? "fr" : "en");
+  const lines = fr
+    ? [
+        `Veuillez trouver votre facture ${inv.number}.`,
+        `Montant : ${amount(inv.totalCents)}`,
+        inv.balanceCents < inv.totalCents ? `Reste à payer : ${amount(inv.balanceCents)}` : "",
+        due ? `À régler avant le : ${due}` : "",
+        "Les moyens de paiement figurent sur la facture. Répondez à cet e-mail pour toute question.",
+      ]
+    : [
+        `Please find your invoice ${inv.number}.`,
+        `Amount: ${amount(inv.totalCents)}`,
+        inv.balanceCents < inv.totalCents ? `Balance due: ${amount(inv.balanceCents)}` : "",
+        due ? `Due by: ${due}` : "",
+        "How to pay is shown on the invoice. Reply to this email with any questions.",
+      ];
+  await deliver(`invoice ${inv.number}`, [
+    () =>
+      sendEmail({
+        to: inv.billEmail!,
+        subject: fr ? `Facture ${inv.number} — Clinex Pro` : `Invoice ${inv.number} from Clinex Pro`,
+        ...render(fr ? `Bonjour ${firstName(inv.billName)}` : `Hello ${firstName(inv.billName)}`, lines.filter(Boolean), {
+          label: fr ? "Voir la facture" : "View invoice",
+          href: `${SITE_URL}/i/${inv.token}`,
+        }),
+        replyTo: notifyConfig.email.teamTo,
+      }),
+  ]);
+}
+
 /** Runs every send; one failing channel never stops the others. */
 async function deliver(what: string, sends: (() => Promise<void>)[]) {
   const results = await Promise.allSettled(sends.map((send) => send()));
