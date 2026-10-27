@@ -11,6 +11,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { JsonLd } from "@/components/json-ld";
 import { Pwa } from "@/components/pwa";
 import { BackToTop } from "@/components/back-to-top";
+import { Analytics } from "@/components/analytics";
 
 const roboto = Roboto({ subsets: ["latin"], variable: "--font-roboto" });
 
@@ -84,6 +85,7 @@ export default async function LangLayout({ children, params }: LayoutProps<"/[la
         <SiteFooter lang={lang} t={t} />
         <BackToTop label={t.footer.backToTop} />
         <Pwa labels={t.pwa} />
+        <Analytics lang={lang} t={t.consent} />
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { track } from "@/lib/track";
 import type { Dictionary } from "@/dictionaries";
 import { TOWNS } from "@/content/towns";
 import { createLead, type LeadState } from "./actions";
@@ -8,6 +9,10 @@ import { Req, RequiredNote } from "@/components/required-mark";
 
 export function LeadForm({ t }: { t: Dictionary["business"] }) {
   const [state, action, pending] = useActionState<LeadState, FormData>(createLead, { status: "idle" });
+
+  useEffect(() => {
+    if (state.status === "sent") track("generate_lead", { lead_type: "business_enquiry", sector: state.sector });
+  }, [state]);
 
   if (state.status === "sent") {
     return (

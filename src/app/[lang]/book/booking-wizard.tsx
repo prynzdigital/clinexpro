@@ -86,7 +86,7 @@ export function BookingWizard({ lang, t, businessHref, initialService, services,
     setValues(defaultsFor(slug));
     setAddons([]);
     setFrequency(getPricedService(slug)?.frequencies[0] ?? "once");
-    track("quote_started", { service: slug });
+    track("begin_checkout", { service: slug, currency: "MUR" });
     requestAnimationFrame(() => sizeRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
 
@@ -110,7 +110,6 @@ export function BookingWizard({ lang, t, businessHref, initialService, services,
   const submit = () => {
     setError("");
     startTransition(async () => {
-      track("booking_submitted", { service, value: price?.totalMur, currency: "MUR" });
       const result = await createBooking({
         lang,
         service,

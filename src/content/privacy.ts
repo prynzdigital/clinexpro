@@ -134,11 +134,13 @@ export const PRIVACY_SECTIONS: Section[] = [
     title: { en: "8. Cookies and similar technologies", fr: "8. Cookies et technologies similaires" },
     body: {
       en: [
-        "We only use what the website needs to work: a secure sign-in cookie for our staff dashboard, and small settings stored in your browser (for example, if you dismiss the app install banner). If we add analytics or advertising tools in future, we will update this policy and ask for your consent where required.",
+        "Some things the website needs to work: a secure sign-in cookie for our staff dashboard and staff app, and small settings stored in your browser (for example, if you dismiss the app install banner, or your cookie choice).",
+        "Measurement, only if you accept: we use Google Analytics (through Google Tag Manager) to count visits and see which pages and adverts lead to bookings and enquiries. It sets cookies and sends Google technical details such as pages viewed, device type, approximate location and a booking reference with its value. We never send your name, email or phone number. If you decline, these tools are not loaded at all. You can change your choice at any time with “Cookie settings” at the bottom of every page.",
         "Our video is only loaded from YouTube's privacy-enhanced service when you press play.",
       ],
       fr: [
-        "Nous n'utilisons que ce dont le site a besoin pour fonctionner : un cookie de connexion sécurisé pour l'espace de notre personnel, et de petits réglages enregistrés dans votre navigateur (par exemple si vous fermez la bannière d'installation de l'application). Si nous ajoutons des outils d'analyse ou de publicité, nous mettrons cette politique à jour et demanderons votre consentement lorsque c'est requis.",
+        "Ce dont le site a besoin pour fonctionner : un cookie de connexion sécurisé pour l'espace de notre personnel et l'application du personnel, et de petits réglages enregistrés dans votre navigateur (par exemple si vous fermez la bannière d'installation de l'application, ou votre choix concernant les cookies).",
+        "Mesure d'audience, uniquement si vous acceptez : nous utilisons Google Analytics (via Google Tag Manager) pour compter les visites et savoir quelles pages et publicités mènent à des réservations et demandes. Ces outils déposent des cookies et transmettent à Google des informations techniques comme les pages vues, le type d'appareil, une localisation approximative et une référence de réservation avec son montant. Nous n'envoyons jamais votre nom, votre e-mail ni votre téléphone. Si vous refusez, ces outils ne sont pas chargés du tout. Vous pouvez changer d'avis à tout moment avec « Paramètres des cookies » en bas de chaque page.",
         "Notre vidéo n'est chargée depuis le service à confidentialité renforcée de YouTube que lorsque vous appuyez sur lecture.",
       ],
     },

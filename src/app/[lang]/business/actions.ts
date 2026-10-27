@@ -15,7 +15,13 @@ const LeadInput = z.object({
   message: z.string().trim().max(2000).optional(),
 });
 
-export type LeadState = { status: "idle" | "sent" | "error"; fieldErrors?: string[]; values?: Record<string, string> };
+export type LeadState = {
+  status: "idle" | "sent" | "error";
+  fieldErrors?: string[];
+  values?: Record<string, string>;
+  /** For the conversion event only; never personal details. */
+  sector?: string;
+};
 
 /** What the visitor typed, sent back on errors so the form keeps it after React resets it. */
 function typedValues(formData: FormData) {
@@ -50,5 +56,5 @@ export async function createLead(_prev: LeadState, formData: FormData): Promise<
       summary: [`${lead.sector}${lead.town ? ` in ${lead.town}` : ""}`, ...(lead.message ? [lead.message] : [])],
     }),
   );
-  return { status: "sent" };
+  return { status: "sent", sector: lead.sector };
 }

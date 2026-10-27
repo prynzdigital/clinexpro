@@ -49,4 +49,4 @@ The build runs `npm run db:migrate` before `next build`; `/api/health` reports w
 ## Not yet connected
 
 - A live payment gateway (the test gateway and provider slot are ready)
-- Google Tag Manager / GA4 (`src/lib/track.ts` pushes funnel events once a tag is installed)
+- Google Tag Manager / GA4 IDs (consent banner and funnel events are built in; see DEPLOY.md section 6)

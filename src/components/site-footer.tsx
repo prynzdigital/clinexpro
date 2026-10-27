@@ -7,6 +7,7 @@ import { SERVICES } from "@/content/services";
 import { Icon } from "./icons";
 import { CtaCard } from "./cta-card";
 import { SocialLinks } from "./social-links";
+import { ConsentSettingsLink } from "./analytics";
 
 const heading = "mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-accent";
 const link = "text-white/75 transition-colors hover:text-white";
@@ -49,6 +50,7 @@ export function SiteFooter({ lang, t }: { lang: Locale; t: Dictionary }) {
                 <li><Link href={`/${lang}/business`} className={link}>{t.nav.business}</Link></li>
                 <li><Link href={`/${lang}/contact`} className={link}>{t.nav.contact}</Link></li>
                 <li><Link href={`/${lang}/privacy`} className={link}>{t.footer.privacy}</Link></li>
+                <li><ConsentSettingsLink label={t.footer.cookies} className={`${link} text-left`} /></li>
               </ul>
             </div>
             <div>

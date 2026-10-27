@@ -130,6 +130,52 @@ each invoice to be sent to the MRA system for an approval number and QR code.
 That needs MRA credentials and is not built yet. Ask the accountant whether it
 applies before relying on these invoices for VAT.
 
+## 6. Marketing measurement (Google Analytics / Tag Manager)
+
+The site already sends the funnel events below. Visitors see a consent banner
+(English/French) as soon as a tracking ID is set. **No Google script loads until
+they press Accept**, and "Cookie settings" in the footer lets them change their
+mind. Google Consent Mode v2 signals are sent too, as Google Ads requires.
+
+| Event | When | Details sent |
+| --- | --- | --- |
+| `begin_checkout` | A service is picked in the booking form | `service` |
+| `quote_step` | Next step of the booking form | `step`, `service` |
+| `purchase` | Booking confirmed (once per booking) | `transaction_id` (booking ref), `value`, `currency` MUR, `items` |
+| `deposit_paid` | Deposit paid online | `transaction_id`, `value` |
+| `generate_lead` | Business enquiry or home-page request sent | `lead_type`, `sector` or `service` |
+| `contact_click` | Phone, WhatsApp or email link tapped | `method`, `location` (page) |
+
+No names, emails or phone numbers are ever sent.
+
+**Recommended: Google Tag Manager**
+
+1. At analytics.google.com create a **GA4 property** (time zone Mauritius,
+   currency MUR) with a Web data stream for the domain. Keep **Enhanced
+   measurement** on: it counts page changes within the site.
+2. At tagmanager.google.com create a **Web container**.
+3. In the container:
+   - Add a **Google tag** with the GA4 measurement ID (`G-…`), firing on
+     *Initialization – All Pages*.
+   - Add a **GA4 Event** tag with Event name `{{Event}}`, firing on a *Custom
+     Event* trigger with event name matching the regex
+     `begin_checkout|quote_step|purchase|deposit_paid|generate_lead|contact_click`.
+     Add **Data Layer Variables** for the details in the table (for example
+     `transaction_id`, `value`, `currency`, `items`, `lead_type`, `method`)
+     and pass them as event parameters.
+   - Optional: **Google Ads** conversion tags on `purchase` and `generate_lead`,
+     and the **Meta Pixel** (community template) on the same events.
+   - Submit and publish.
+4. In GA4 → Admin → Events, mark **`purchase`** and **`generate_lead`** as **key
+   events** (conversions).
+5. In Vercel, add `NEXT_PUBLIC_GTM_ID=GTM-…` and redeploy. This setting is
+   built into the page, so a redeploy is required.
+6. Check with GTM **Preview** (accept the banner first), then GA4 → Realtime.
+
+**Simpler: GA4 only.** Skip Tag Manager and set `NEXT_PUBLIC_GA_ID=G-…`
+instead. The same events go straight to GA4; mark `purchase` and
+`generate_lead` as key events.
+
 ## Checklist
 
 - [ ] Neon connected, `SESSION_SECRET` and `NEXT_PUBLIC_SITE_URL` set
@@ -139,4 +185,5 @@ applies before relying on these invoices for VAT.
 - [ ] `/api/health` shows `"ok": true`
 - [ ] One real test booking: team email + WhatsApp received, customer email received
 - [ ] Invoice details set (`BUSINESS_BRN`, payment instructions; VAT if registered)
+- [ ] Tracking: `NEXT_PUBLIC_GTM_ID` (or `NEXT_PUBLIC_GA_ID`) set, key events marked in GA4
 - [ ] Domain `clinexpro.net` pointed to Vercel (Settings → Domains)

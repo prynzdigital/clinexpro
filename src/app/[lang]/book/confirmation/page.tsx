@@ -10,6 +10,7 @@ import { getTown } from "@/content/towns";
 import { formatMur } from "@/lib/pricing";
 import { Icon } from "@/components/icons";
 import { getProvider } from "@/lib/payments";
+import { Conversion } from "./conversion";
 
 export const metadata: Metadata = { robots: { index: false } };
 
@@ -55,6 +56,15 @@ export default async function ConfirmationPage({ params, searchParams }: PagePro
         paid={booking.paymentStatus !== "unpaid"}
         failed={payment === "failed"}
         online={Boolean(getProvider()) && booking.status !== "cancelled"}
+      />
+
+      <Conversion
+        bookingRef={booking.ref}
+        service={booking.service}
+        serviceName={getService(booking.service)?.name.en ?? booking.service}
+        valueMur={booking.estimateMur}
+        depositMur={booking.depositMur}
+        depositPaid={booking.paymentStatus !== "unpaid"}
       />
 
       <Link href={`/${lang}`} className="btn-secondary">{t.confirmation.home}</Link>

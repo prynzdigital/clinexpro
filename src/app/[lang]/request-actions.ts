@@ -24,7 +24,13 @@ const RequestInput = z.object({
   notes: z.string().trim().max(2000).optional(),
 });
 
-export type RequestState = { status: "idle" | "sent" | "error"; fieldErrors?: string[]; values?: Record<string, string> };
+export type RequestState = {
+  status: "idle" | "sent" | "error";
+  fieldErrors?: string[];
+  values?: Record<string, string>;
+  /** For the conversion event only; never personal details. */
+  service?: string;
+};
 
 /** What the visitor typed, sent back on errors so the form keeps it after React resets it. */
 function typedValues(formData: FormData) {
@@ -84,5 +90,5 @@ export async function createBookingRequest(_prev: RequestState, formData: FormDa
       ],
     }),
   );
-  return { status: "sent" };
+  return { status: "sent", service: service ?? undefined };
 }

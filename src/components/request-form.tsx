@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { track } from "@/lib/track";
 import type { Dictionary } from "@/dictionaries";
 import { createBookingRequest, type RequestState } from "@/app/[lang]/request-actions";
 import { Icon } from "./icons";
@@ -21,6 +22,10 @@ export function RequestForm({
   minDate: string;
 }) {
   const [state, action, pending] = useActionState<RequestState, FormData>(createBookingRequest, { status: "idle" });
+
+  useEffect(() => {
+    if (state.status === "sent") track("generate_lead", { lead_type: "booking_request", service: state.service });
+  }, [state]);
 
   if (state.status === "sent") {
     return (

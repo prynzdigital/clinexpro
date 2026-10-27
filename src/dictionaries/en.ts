@@ -307,9 +307,17 @@ const en = {
     regions: "Service areas",
     follow: "Follow us",
     privacy: "Privacy policy",
+    cookies: "Cookie settings",
     rights: "All rights reserved.",
     credit: "Digital Excellence, Powered by",
     backToTop: "Back to top",
+  },
+  consent: {
+    title: "Can we measure visits?",
+    body: "With your OK, we use Google Analytics cookies to see which pages and adverts bring people to book, so we can improve the site. No names or contact details are shared. You can change your mind any time from the footer.",
+    accept: "Accept",
+    decline: "Decline",
+    more: "Privacy policy",
   },
   pwa: {
     install: "Install the Clinex Pro app",

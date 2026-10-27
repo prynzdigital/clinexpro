@@ -309,9 +309,17 @@ const fr: Dictionary = {
     regions: "Zones desservies",
     follow: "Suivez-nous",
     privacy: "Politique de confidentialité",
+    cookies: "Paramètres des cookies",
     rights: "Tous droits réservés.",
     credit: "Excellence numérique, propulsé par",
     backToTop: "Retour en haut",
+  },
+  consent: {
+    title: "Pouvons-nous mesurer les visites ?",
+    body: "Avec votre accord, nous utilisons les cookies de Google Analytics pour savoir quelles pages et publicités amènent à réserver, afin d'améliorer le site. Aucun nom ni coordonnée n'est partagé. Vous pouvez changer d'avis à tout moment depuis le bas de page.",
+    accept: "Accepter",
+    decline: "Refuser",
+    more: "Politique de confidentialité",
   },
   pwa: {
     install: "Installez l'application Clinex Pro",
