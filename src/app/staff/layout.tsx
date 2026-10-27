@@ -1,22 +1,36 @@
 import type { Metadata, Viewport } from "next";
 import { Roboto } from "next/font/google";
 import "../globals.css";
+import { StaffPwa } from "./app-client";
 
 const roboto = Roboto({ subsets: ["latin"], variable: "--font-roboto" });
 
 export const metadata: Metadata = {
-  title: { default: "Clinex Pro Staff", template: "%s | Clinex Pro Staff" },
+  title: { default: "Clinex Staff", template: "%s | Clinex Staff" },
   robots: { index: false, follow: false },
-  appleWebApp: { capable: true, title: "Clinex Staff", statusBarStyle: "default" },
+  // Its own install manifest, so it installs as "Clinex Staff", not the customer site.
+  manifest: "/staff/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "Clinex Staff", statusBarStyle: "black-translucent" },
+  icons: { icon: [{ url: "/icons/staff/192", type: "image/png" }], apple: "/icons/staff/180" },
+  formatDetection: { telephone: false },
 };
 
-export const viewport: Viewport = { themeColor: "#031432" };
+export const viewport: Viewport = {
+  themeColor: "#031432",
+  width: "device-width",
+  initialScale: 1,
+  // Edge to edge on notched phones; padding uses the safe-area insets.
+  viewportFit: "cover",
+};
 
 // Cleaners' phone app: its own root layout, separate from the website and admin.
 export default function StaffRootLayout({ children }: LayoutProps<"/staff">) {
   return (
     <html lang="en" className={`${roboto.variable} h-full antialiased`}>
-      <body className="min-h-full bg-surface-alt font-sans">{children}</body>
+      <body className="min-h-full bg-[#eef1f5] font-sans text-ink">
+        <StaffPwa />
+        {children}
+      </body>
     </html>
   );
 }

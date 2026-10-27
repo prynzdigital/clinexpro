@@ -27,5 +27,5 @@ export const requireStaff = cache(async () => {
   const db = await getDb();
   const [person] = await db.select().from(schema.staff).where(eq(schema.staff.id, token.sid)).limit(1);
   if (!person || !person.active || !person.pinHash || person.sessionVersion !== token.ver) redirect("/staff/login");
-  return { id: person.id, name: person.name, color: person.color };
+  return { id: person.id, name: person.name, color: person.color, phone: person.phone };
 });

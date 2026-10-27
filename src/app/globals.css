@@ -82,6 +82,13 @@ body {
 
 /* Hero slider: progress bar drives autoplay; slow zoom on the active photo. */
 @theme {
+  /* Staff app: wrong PIN */
+  --animate-shake: shake 0.35s ease-in-out;
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-8px); }
+    40%, 80% { transform: translateX(8px); }
+  }
   --animate-hero-progress: hero-progress linear forwards;
   --animate-hero-progress-y: hero-progress-y linear forwards;
   --animate-hero-zoom: hero-zoom 9s ease-out forwards;

@@ -1,170 +1,99 @@
 import Link from "next/link";
-import { and, asc, eq, gte, inArray, lte, ne } from "drizzle-orm";
-import { getDb, schema } from "@/db";
 import { requireStaff } from "@/lib/staff-auth";
 import { mauritiusDate } from "@/lib/dates";
-import { addDays, fromMinutes, hoursLabel, isIsoDate, jobMinutes, toMinutes } from "@/lib/schedule";
-import { getService } from "@/content/services";
-import { getTown } from "@/content/towns";
-import en from "@/dictionaries/en";
-import { Logo } from "@/components/logo";
+import { addDays, hoursLabel, isIsoDate } from "@/lib/schedule";
+import { myJobs } from "@/lib/staff-jobs";
 import { Icon } from "@/components/icons";
-import { checkIn, checkOut, staffLogout } from "./actions";
+import { InstallCard } from "./app-client";
+import { JobCard } from "./job-card";
+import { StaffShell } from "./shell";
 
-export const metadata = { title: "My jobs" };
+export const metadata = { title: "Today" };
 
-const time = (d: Date) =>
-  new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Indian/Mauritius" }).format(d);
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const LONG_DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const parts = (iso: string) => {
+  const d = new Date(`${iso}T00:00:00Z`);
+  return { wd: d.getUTCDay(), day: d.getUTCDate(), month: MONTHS[d.getUTCMonth()] };
+};
 
-const dayLabel = (iso: string, style: "short" | "long") =>
-  new Intl.DateTimeFormat("en-GB", { weekday: style, day: "numeric", month: style === "long" ? "long" : undefined, timeZone: "UTC" }).format(
-    new Date(`${iso}T00:00:00Z`),
-  );
+const greeting = () => {
+  const hour = Number(new Intl.DateTimeFormat("en-GB", { hour: "numeric", hourCycle: "h23", timeZone: "Indian/Mauritius" }).format(new Date()));
+  return hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+};
 
-export default async function StaffHome({ searchParams }: PageProps<"/staff">) {
+export default async function StaffToday({ searchParams }: PageProps<"/staff">) {
   const me = await requireStaff();
   const today = mauritiusDate();
   const week = Array.from({ length: 7 }, (_, i) => addDays(today, i));
   const { day: requested } = await searchParams;
   const day = isIsoDate(requested) && week.includes(requested) ? requested : today;
 
-  const db = await getDb();
-  const { bookings: b, bookingAssignments: a, customers: c } = schema;
-  // Only jobs this person is on, from today to a week ahead.
-  const mine = await db
-    .select({ booking: b, assignment: a, customer: c.name, phone: c.phone })
-    .from(a)
-    .innerJoin(b, eq(a.bookingId, b.id))
-    .innerJoin(c, eq(b.customerId, c.id))
-    .where(and(eq(a.staffId, me.id), ne(b.status, "cancelled"), gte(b.date, today), lte(b.date, week[6])))
-    .orderBy(asc(b.date), asc(b.timeSlot));
-  const jobs = mine.filter((j) => j.booking.date === day);
-  const teammates = jobs.length
-    ? await db
-        .select({ bookingId: a.bookingId, name: schema.staff.name })
-        .from(a)
-        .innerJoin(schema.staff, eq(a.staffId, schema.staff.id))
-        .where(and(inArray(a.bookingId, jobs.map((j) => j.booking.id)), ne(a.staffId, me.id)))
-    : [];
+  const all = await myJobs(me.id, today, week[6]);
+  const jobs = all.filter((j) => j.date === day);
+  const isToday = day === today;
+  const done = jobs.filter((j) => j.checkedOutAt).length;
+  const minutes = jobs.reduce((s, j) => s + j.minutes, 0);
+  // The job to focus on: the one on site, else the first not started.
+  const focus = isToday ? (jobs.find((j) => j.checkedInAt && !j.checkedOutAt) ?? jobs.find((j) => !j.checkedInAt)) : undefined;
+  const p = parts(day);
 
   return (
-    <div className="mx-auto min-h-svh max-w-lg pb-10">
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-white/95 px-4 py-3 backdrop-blur">
-        <Logo className="h-7 w-auto" />
-        <form action={staffLogout}>
-          <button type="submit" className="flex items-center gap-1.5 text-sm text-ink-soft" aria-label="Sign out">
-            {me.name.split(" ")[0]} <Icon name="logout" width={18} height={18} />
-          </button>
-        </form>
-      </header>
-
-      <nav className="flex gap-1.5 overflow-x-auto px-4 py-3" aria-label="Day">
+    <StaffShell
+      me={me}
+      tab="today"
+      title={isToday ? `${greeting()}, ${me.name.split(" ")[0]}` : `${LONG_DAYS[p.wd]} ${p.day} ${p.month}`}
+      subtitle={isToday ? `${LONG_DAYS[p.wd]} ${p.day} ${p.month}` : "Planned jobs"}
+    >
+      <nav aria-label="Day" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
         {week.map((d) => {
-          const n = mine.filter((j) => j.booking.date === d).length;
+          const q = parts(d);
+          const n = all.filter((j) => j.date === d).length;
+          const active = d === day;
           return (
             <Link
               key={d}
               href={d === today ? "/staff" : `/staff?day=${d}`}
-              aria-current={d === day ? "date" : undefined}
-              className={`min-w-14 shrink-0 rounded-xl px-2 py-2 text-center text-xs font-semibold ${d === day ? "bg-navy text-white" : "bg-white text-ink-soft"}`}
+              aria-current={active ? "date" : undefined}
+              aria-label={`${LONG_DAYS[q.wd]} ${q.day}: ${n} job${n === 1 ? "" : "s"}`}
+              className={`flex min-w-14 shrink-0 flex-col items-center rounded-2xl px-2 py-2 transition-colors ${active ? "bg-navy text-white shadow-md" : "bg-white text-ink"}`}
             >
-              {d === today ? "Today" : dayLabel(d, "short").split(" ")[0]}
-              <span className="block text-lg leading-tight">{d.slice(8)}</span>
-              <span className={`mx-auto mt-0.5 block size-1.5 rounded-full ${n ? (d === day ? "bg-white" : "bg-brand") : "bg-transparent"}`} aria-label={`${n} jobs`} />
+              <span className={`text-[11px] font-semibold uppercase ${active ? "text-white/70" : "text-ink-soft"}`}>{d === today ? "Today" : WEEKDAYS[q.wd]}</span>
+              <span className="text-xl font-bold leading-tight">{q.day}</span>
+              <span className={`mt-0.5 h-1.5 w-1.5 rounded-full ${n ? (active ? "bg-accent" : "bg-brand") : "bg-transparent"}`} />
             </Link>
           );
         })}
       </nav>
 
-      <main className="space-y-4 px-4">
-        <h1 className="text-xl font-bold">
-          {day === today ? "Today" : dayLabel(day, "long")}{" "}
-          <span className="font-normal text-ink-soft">· {jobs.length ? `${jobs.length} job${jobs.length === 1 ? "" : "s"}` : "no jobs"}</span>
-        </h1>
+      <section className="grid grid-cols-3 gap-2" aria-label="Summary">
+        <Summary icon="briefcase" value={String(jobs.length)} label={jobs.length === 1 ? "job" : "jobs"} tone="bg-white" />
+        <Summary icon="clock" value={minutes ? hoursLabel(minutes) : "0h"} label="planned" tone="bg-white" />
+        <Summary icon="check" value={`${done}/${jobs.length}`} label="done" tone={jobs.length && done === jobs.length ? "bg-emerald-50 text-emerald-900" : "bg-white"} />
+      </section>
 
-        {jobs.length === 0 && (
-          <p className="rounded-2xl bg-white p-8 text-center text-ink-soft">Nothing planned for you this day.</p>
-        )}
+      {isToday && <InstallCard dismissible />}
 
-        {jobs.map(({ booking, assignment, customer, phone }) => {
-          const start = toMinutes(booking.timeSlot);
-          const end = fromMinutes(start + jobMinutes(booking));
-          const town = getTown(booking.town)?.name ?? booking.town;
-          const place = `${booking.address}, ${town}, Mauritius`;
-          const { addons = [], ...counts } = booking.details as Record<string, number> & { addons?: string[] };
-          const team = teammates.filter((t) => t.bookingId === booking.id).map((t) => t.name);
-          const isToday = booking.date === today;
-          const state = assignment.checkedOutAt ? "done" : assignment.checkedInAt ? "on-site" : "to-do";
+      {jobs.length === 0 ? (
+        <div className="rounded-3xl bg-white p-10 text-center">
+          <span className="mx-auto grid size-14 place-items-center rounded-full bg-surface-alt text-ink-soft"><Icon name="sparkle" width={26} height={26} /></span>
+          <p className="mt-3 font-semibold">No jobs {isToday ? "today" : "this day"}</p>
+          <p className="text-sm text-ink-soft">The office will add them to your schedule.</p>
+        </div>
+      ) : (
+        jobs.map((job) => <JobCard key={job.id} job={job} isToday={isToday} highlight={job.id === focus?.id} />)
+      )}
+    </StaffShell>
+  );
+}
 
-          return (
-            <article key={booking.id} className="overflow-hidden rounded-2xl bg-white shadow-sm">
-              <div className={`flex items-center justify-between px-4 py-2 text-sm font-semibold ${state === "done" ? "bg-emerald-50 text-emerald-800" : state === "on-site" ? "bg-sky-50 text-sky-800" : "bg-surface-alt text-ink"}`}>
-                <span>{booking.timeSlot} – {end} <span className="font-normal">({hoursLabel(jobMinutes(booking))})</span></span>
-                <span>
-                  {state === "done" && `Done ${time(assignment.checkedOutAt!)}`}
-                  {state === "on-site" && `On site since ${time(assignment.checkedInAt!)}`}
-                  {state === "to-do" && (isToday ? "Not started" : "Upcoming")}
-                </span>
-              </div>
-
-              <div className="space-y-3 p-4">
-                <div>
-                  <h2 className="text-lg font-bold">{getService(booking.service)?.name.en ?? booking.service}</h2>
-                  <p className="text-ink-soft">{customer}</p>
-                  <p className="mt-1">{booking.address}, {town}</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place)}`} target="_blank" rel="noopener" className="btn-secondary min-h-12">
-                    <Icon name="pin" width={18} height={18} /> Directions
-                  </a>
-                  <a href={`tel:${phone}`} className="btn-secondary min-h-12">
-                    <Icon name="phone" width={18} height={18} /> Call
-                  </a>
-                </div>
-
-                <dl className="space-y-1 text-sm">
-                  {Object.keys(counts).length > 0 && (
-                    <div><dt className="inline font-medium">Job: </dt><dd className="inline">{Object.entries(counts).map(([k, v]) => `${en.booking.fields[k] ?? k}: ${v}`).join(" · ")}</dd></div>
-                  )}
-                  {addons.length > 0 && (
-                    <div><dt className="inline font-medium">Extras: </dt><dd className="inline">{addons.map((x) => en.booking.addons[x] ?? x).join(", ")}</dd></div>
-                  )}
-                  {team.length > 0 && (
-                    <div><dt className="inline font-medium">With: </dt><dd className="inline">{team.join(", ")}</dd></div>
-                  )}
-                </dl>
-
-                {booking.notes && (
-                  <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-950">
-                    <span className="font-semibold">Customer notes: </span>{booking.notes}
-                  </p>
-                )}
-
-                {isToday && state === "to-do" && (
-                  <form action={checkIn}>
-                    <input type="hidden" name="bookingId" value={booking.id} />
-                    <button type="submit" className="btn-primary min-h-14 w-full text-lg">I&apos;ve arrived: check in</button>
-                  </form>
-                )}
-                {state === "on-site" && (
-                  <form action={checkOut} className="space-y-2">
-                    <input type="hidden" name="bookingId" value={booking.id} />
-                    <label className="block">
-                      <span className="label">Anything to report? (optional)</span>
-                      <textarea name="report" rows={2} maxLength={2000} placeholder="Broken item, extra work, customer request…" className="field" />
-                    </label>
-                    <button type="submit" className="min-h-14 w-full rounded-full bg-emerald-600 px-6 text-lg font-semibold text-white hover:bg-emerald-700">Job finished: check out</button>
-                  </form>
-                )}
-                {state === "done" && assignment.report && (
-                  <p className="text-sm text-ink-soft"><span className="font-medium">Your report:</span> {assignment.report}</p>
-                )}
-              </div>
-            </article>
-          );
-        })}
-      </main>
+function Summary({ icon, value, label, tone }: { icon: "briefcase" | "clock" | "check"; value: string; label: string; tone: string }) {
+  return (
+    <div className={`rounded-2xl p-3 text-center shadow-sm ${tone}`}>
+      <Icon name={icon} width={18} height={18} className="mx-auto opacity-60" />
+      <p className="mt-1 text-lg font-bold tabular-nums">{value}</p>
+      <p className="text-xs text-ink-soft">{label}</p>
     </div>
   );
 }

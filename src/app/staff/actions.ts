@@ -34,7 +34,7 @@ export async function checkIn(formData: FormData) {
     .update(a)
     .set({ checkedInAt: new Date() })
     .where(and(eq(a.bookingId, id.data), eq(a.staffId, me.id), isNull(a.checkedInAt)));
-  revalidatePath("/staff");
+  revalidatePath("/staff", "layout");
   revalidatePath("/admin", "layout");
 }
 
@@ -60,7 +60,7 @@ export async function checkOut(formData: FormData) {
       await tx.update(b).set({ status: "completed" }).where(and(eq(b.id, job.bookingId), ne(b.status, "cancelled")));
     }
   });
-  revalidatePath("/staff");
+  revalidatePath("/staff", "layout");
   revalidatePath("/admin", "layout");
 }
 
