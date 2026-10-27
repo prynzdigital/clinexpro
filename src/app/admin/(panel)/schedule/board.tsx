@@ -42,10 +42,19 @@ function apply(jobs: BoardJob[], change: Change): BoardJob[] {
   });
 }
 
-const dayName = (iso: string, style: "short" | "long" = "short") =>
-  new Intl.DateTimeFormat("en-GB", { weekday: style, day: "numeric", month: style === "long" ? "long" : "short", timeZone: "UTC" }).format(
-    new Date(`${iso}T00:00:00Z`),
-  );
+// Spelled out by hand: Node and browsers format dates slightly differently
+// ("Mon 26 Oct" vs "Mon, 26 Oct"), which breaks hydration of this client component.
+const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+const dayName = (iso: string, style: "short" | "long" = "short") => {
+  const d = new Date(`${iso}T00:00:00Z`);
+  const weekday = WEEKDAYS[d.getUTCDay()];
+  const month = MONTHS[d.getUTCMonth()];
+  return style === "long"
+    ? `${weekday} ${d.getUTCDate()} ${month}`
+    : `${weekday.slice(0, 3)} ${d.getUTCDate()} ${month.slice(0, 3)}`;
+};
 
 const STATUS_DOT: Record<BoardJob["status"], string> = {
   pending: "bg-amber-400",

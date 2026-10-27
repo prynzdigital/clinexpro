@@ -146,6 +146,50 @@ export async function blankDraft(customerId: number) {
   return invoice.id;
 }
 
+/**
+ * A new draft copying an invoice's customer, lines and notes: the way to correct
+ * an issued invoice (void it, duplicate, fix, issue). Keeps the booking link only
+ * when that booking has no other live invoice.
+ */
+export async function duplicateAsDraft(invoiceId: number) {
+  const db = await getDb();
+  const source = await loadInvoice({ id: invoiceId });
+  if (!source) return null;
+  const { invoice, lines } = source;
+  let bookingId = invoice.bookingId;
+  if (bookingId) {
+    const [live] = await db
+      .select({ id: schema.invoices.id })
+      .from(schema.invoices)
+      .where(and(eq(schema.invoices.bookingId, bookingId), ne(schema.invoices.status, "void")));
+    if (live) bookingId = null;
+  }
+  const { vatRateBp } = invoiceSettings();
+  return db.transaction(async (tx) => {
+    const [copy] = await tx
+      .insert(schema.invoices)
+      .values({
+        token: newToken(),
+        customerId: invoice.customerId,
+        bookingId,
+        billName: invoice.billName,
+        billEmail: invoice.billEmail,
+        billAddress: invoice.billAddress,
+        lang: invoice.lang,
+        notes: invoice.notes,
+        vatRateBp,
+        ...totals(lines, vatRateBp),
+      })
+      .returning({ id: schema.invoices.id });
+    if (lines.length) {
+      await tx.insert(schema.invoiceLines).values(
+        lines.map((l) => ({ invoiceId: copy.id, position: l.position, description: l.description, quantity: l.quantity, unitCents: l.unitCents })),
+      );
+    }
+    return copy.id;
+  });
+}
+
 // --- Issuing ----------------------------------------------------------------
 
 /** Gives a draft the next number for this year and locks it. Returns the number. */

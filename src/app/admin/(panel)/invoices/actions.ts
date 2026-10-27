@@ -9,7 +9,7 @@ import { getDb, schema } from "@/db";
 import { requireAdmin } from "@/lib/auth";
 import { mauritiusDate } from "@/lib/dates";
 import { isIsoDate } from "@/lib/schedule";
-import { blankDraft, draftForBooking, issue, loadInvoice, summarise, syncBooking, totals } from "@/lib/invoices";
+import { blankDraft, draftForBooking, duplicateAsDraft, issue, loadInvoice, summarise, syncBooking, totals } from "@/lib/invoices";
 import { sendInvoiceEmail } from "@/lib/notify";
 import { emailEnabled } from "@/lib/notify/channels";
 
@@ -24,12 +24,37 @@ export async function createForBooking(formData: FormData) {
   redirect(`/admin/invoices/${invoiceId}`);
 }
 
-export async function createForCustomer(formData: FormData) {
+export type NewInvoiceState = { status: "idle" | "error"; message?: string };
+
+/** "New invoice": for one of a customer's jobs (pre-filled), or blank for that customer. */
+export async function createInvoice(_prev: NewInvoiceState, formData: FormData): Promise<NewInvoiceState> {
   await requireAdmin();
-  const invoiceId = await blankDraft(id.parse(formData.get("customerId")));
-  if (!invoiceId) return;
+  const customerId = id.safeParse(formData.get("customerId"));
+  if (!customerId.success) return { status: "error", message: "Choose a customer." };
+  const booking = formData.get("bookingId");
+  let invoiceId: number | null;
+  if (booking) {
+    const bookingId = id.safeParse(booking);
+    if (!bookingId.success) return { status: "error", message: "Choose a job, or leave it blank." };
+    const db = await getDb();
+    const [row] = await db.select({ customerId: schema.bookings.customerId }).from(schema.bookings).where(eq(schema.bookings.id, bookingId.data));
+    if (row?.customerId !== customerId.data) return { status: "error", message: "That job belongs to another customer." };
+    invoiceId = await draftForBooking(bookingId.data);
+  } else {
+    invoiceId = await blankDraft(customerId.data);
+  }
+  if (!invoiceId) return { status: "error", message: "Couldn't create the invoice. Reload and try again." };
   done();
   redirect(`/admin/invoices/${invoiceId}`);
+}
+
+/** Copies an invoice into a new draft (for corrections after voiding). */
+export async function duplicateInvoice(formData: FormData) {
+  await requireAdmin();
+  const copyId = await duplicateAsDraft(id.parse(formData.get("id")));
+  if (!copyId) return;
+  done();
+  redirect(`/admin/invoices/${copyId}`);
 }
 
 /** Drafts for every completed job that has no invoice yet. */

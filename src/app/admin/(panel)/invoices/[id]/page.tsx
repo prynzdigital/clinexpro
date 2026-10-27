@@ -8,7 +8,8 @@ import { SITE_URL } from "@/lib/i18n";
 import { invoiceSettings, loadInvoice, money } from "@/lib/invoices";
 import { InvoiceDocument } from "@/components/invoice-document";
 import { InvoiceBadge, PageHeader, shortDate } from "../../ui";
-import { removePayment } from "../actions";
+import { duplicateInvoice, removePayment } from "../actions";
+import { Icon } from "@/components/icons";
 import { DraftEditor, PaymentForm, SendAndShare, VoidForm } from "./invoice-forms";
 
 export const metadata = { title: "Invoice" };
@@ -38,7 +39,17 @@ export default async function InvoicePage({ params }: PageProps<"/admin/invoices
           invoice.issueDate && `issued ${shortDate(invoice.issueDate)}`,
         ].filter(Boolean).join(" · ")}
       >
-        <InvoiceBadge state={state} />
+        <div className="flex flex-wrap items-center gap-2">
+          <InvoiceBadge state={state} />
+          {invoice.status !== "draft" && (
+            <form action={duplicateInvoice}>
+              <input type="hidden" name="id" value={invoice.id} />
+              <button type="submit" className="btn-secondary min-h-10 gap-1.5 px-4 text-sm" title="Copy into a new draft, e.g. to correct a voided invoice">
+                <Icon name="plus" width={16} height={16} /> Duplicate as new draft
+              </button>
+            </form>
+          )}
+        </div>
       </PageHeader>
 
       {invoice.status === "draft" ? (

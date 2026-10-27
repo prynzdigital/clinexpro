@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import { mauritiusDate } from "@/lib/dates";
 import { money, summarise } from "@/lib/invoices";
 import { getService } from "@/content/services";
-import { PageHeader, StatCard, label, shortDate } from "../ui";
+import { NewButton, PageHeader, StatCard, label, shortDate } from "../ui";
 import { DataTable, type Row, type Tone } from "../data-table";
 import { createForBooking, deleteDraft, draftAllCompleted } from "./actions";
 
@@ -42,7 +42,11 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/admin/i
   const tableRows: Row[] = rows.map(({ invoice, balanceCents, state }) => ({
     id: invoice.id,
     href: `/admin/invoices/${invoice.id}`,
-    canDelete: invoice.status === "draft",
+    editHref: `/admin/invoices/${invoice.id}`,
+    canDelete: true,
+    // Issued numbers must stay in the books: those are voided, never deleted.
+    deleteBlockedReason:
+      invoice.status === "draft" ? null : invoice.status === "void" ? "Voided invoices stay on file for the accounts." : "Issued invoices can't be deleted. Open it and void it instead.",
     filter: state,
     cells: {
       number: { text: invoice.number ?? "Draft", mono: Boolean(invoice.number), sort: invoice.number ?? `~${invoice.id}` },
@@ -57,7 +61,9 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/admin/i
 
   return (
     <>
-      <PageHeader title="Invoices" subtitle="Bill finished jobs, record payments, export for the accountant" />
+      <PageHeader title="Invoices" subtitle="Bill finished jobs, record payments, export for the accountant">
+        <NewButton href="/admin/invoices/new" label="New invoice" />
+      </PageHeader>
 
       {created && (
         <p role="status" className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">

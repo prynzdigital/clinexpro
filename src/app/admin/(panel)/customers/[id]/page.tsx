@@ -7,7 +7,6 @@ import { getService } from "@/content/services";
 import { getTown } from "@/content/towns";
 import { BookingBadge, Empty, InvoiceBadge, PageHeader, PaymentBadge, mur, shortDate } from "../../ui";
 import { updateCustomerNotes } from "../../actions";
-import { createForCustomer } from "../../invoices/actions";
 import { money, summarise } from "@/lib/invoices";
 import { Icon } from "@/components/icons";
 import { DeleteButton } from "../../delete-button";
@@ -62,10 +61,7 @@ export default async function CustomerDetail({ params, searchParams }: PageProps
           <section className="card space-y-3 p-5 text-sm">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-base font-semibold">Invoices</h2>
-              <form action={createForCustomer}>
-                <input type="hidden" name="customerId" value={customer.id} />
-                <button type="submit" className="font-medium text-brand-strong hover:underline">+ New invoice</button>
-              </form>
+              <Link href={`/admin/invoices/new?customer=${customer.id}`} className="font-medium text-brand-strong hover:underline">+ New invoice</Link>
             </div>
             {invoices.length === 0 ? (
               <p className="text-ink-soft">None yet.</p>
