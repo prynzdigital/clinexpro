@@ -8,6 +8,7 @@ const LINKS: { href: string; label: string; icon: IconName; ownerOnly?: boolean 
   { href: "/admin", label: "Overview", icon: "home" },
   { href: "/admin/insights", label: "Insights", icon: "chart", ownerOnly: true },
   { href: "/admin/schedule", label: "Schedule", icon: "board" },
+  { href: "/admin/roster", label: "Roster", icon: "roster" },
   { href: "/admin/bookings", label: "Bookings", icon: "calendar" },
   { href: "/admin/invoices", label: "Invoices", icon: "receipt" },
   { href: "/admin/customers", label: "Customers", icon: "users" },

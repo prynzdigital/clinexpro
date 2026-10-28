@@ -3,3 +3,6 @@ export function mauritiusDate(days = 0) {
   const now = new Date(Date.now() + days * 864e5);
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Indian/Mauritius" }).format(now);
 }
+
+/** The current time, read once per server request (for "is this shift open yet?"). */
+export const nowMs = () => Date.now();

@@ -30,6 +30,7 @@ export default async function SchedulePage({ searchParams }: PageProps<"/admin/s
     ? await db.select().from(a).where(inArray(a.bookingId, rows.map((r) => r.booking.id)))
     : [];
   const staff = await db.select().from(schema.staff).orderBy(asc(schema.staff.name));
+  const [crews, crewMembers] = await Promise.all([db.select().from(schema.crews).orderBy(asc(schema.crews.name)), db.select().from(schema.crewMembers)]);
 
   const jobs: BoardJob[] = rows.map(({ booking, customer, phone }) => ({
     id: booking.id,
@@ -44,6 +45,7 @@ export default async function SchedulePage({ searchParams }: PageProps<"/admin/s
     town: getTown(booking.town)?.name ?? booking.town,
     status: booking.status,
     staffIds: assignments.filter((x) => x.bookingId === booking.id).map((x) => x.staffId),
+    leaderId: assignments.find((x) => x.bookingId === booking.id && x.isLeader)?.staffId ?? null,
     progress: progressOf(assignments.filter((x) => x.bookingId === booking.id)),
   }));
   const unassigned = jobs.filter((j) => j.staffIds.length === 0).length;
@@ -73,6 +75,7 @@ export default async function SchedulePage({ searchParams }: PageProps<"/admin/s
         today={today}
         jobs={jobs}
         staff={staff.map((s) => ({ id: s.id, name: s.name, color: s.color, active: s.active }))}
+        crews={crews.map((c) => ({ id: c.id, name: c.name, leaderId: c.leaderId, members: crewMembers.filter((m) => m.crewId === c.id).map((m) => m.staffId) }))}
       />
     </>
   );

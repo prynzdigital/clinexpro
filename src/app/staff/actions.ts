@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { mauritiusDate } from "@/lib/dates";
 import { endStaffSession, requireStaff } from "@/lib/staff-auth";
+import { CLOCK_IN_EARLY_MINUTES, shiftWindow } from "@/lib/roster";
 
 const bookingId = z.coerce.number().int().positive();
 
@@ -60,6 +61,55 @@ export async function checkOut(formData: FormData) {
       await tx.update(b).set({ status: "completed" }).where(and(eq(b.id, job.bookingId), ne(b.status, "cancelled")));
     }
   });
+  revalidatePath("/staff", "layout");
+  revalidatePath("/admin", "layout");
+}
+
+const shiftId = z.coerce.number().int().positive();
+
+/** The signed-in person's place on a shift. */
+async function myShift(staffId: number, id: number) {
+  const db = await getDb();
+  const { shifts: sh, shiftAssignments: a } = schema;
+  const [row] = await db
+    .select({ shift: sh, me: a })
+    .from(a)
+    .innerJoin(sh, eq(a.shiftId, sh.id))
+    .where(and(eq(a.shiftId, id), eq(a.staffId, staffId)))
+    .limit(1);
+  return row;
+}
+
+/** Clock in: from an hour before the shift starts until its planned end. */
+export async function clockIn(formData: FormData) {
+  const me = await requireStaff();
+  const id = shiftId.safeParse(formData.get("shiftId"));
+  if (!id.success) return;
+  const row = await myShift(me.id, id.data);
+  if (!row || row.me.clockInAt) return;
+  const { from, to } = shiftWindow(row.shift.date, row.shift.start, row.shift.end);
+  const now = Date.now();
+  if (now < from - CLOCK_IN_EARLY_MINUTES * 60_000 || now > to) return;
+  const db = await getDb();
+  await db
+    .update(schema.shiftAssignments)
+    .set({ clockInAt: new Date() })
+    .where(and(eq(schema.shiftAssignments.shiftId, id.data), eq(schema.shiftAssignments.staffId, me.id), isNull(schema.shiftAssignments.clockInAt)));
+  revalidatePath("/staff", "layout");
+  revalidatePath("/admin", "layout");
+}
+
+export async function clockOut(formData: FormData) {
+  const me = await requireStaff();
+  const id = shiftId.safeParse(formData.get("shiftId"));
+  if (!id.success) return;
+  const row = await myShift(me.id, id.data);
+  if (!row?.me.clockInAt || row.me.clockOutAt) return;
+  const db = await getDb();
+  await db
+    .update(schema.shiftAssignments)
+    .set({ clockOutAt: new Date() })
+    .where(and(eq(schema.shiftAssignments.shiftId, id.data), eq(schema.shiftAssignments.staffId, me.id)));
   revalidatePath("/staff", "layout");
   revalidatePath("/admin", "layout");
 }

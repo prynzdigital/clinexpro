@@ -50,6 +50,7 @@ export async function saveJob(input: {
   time: string;
   durationMinutes: number | null;
   staffIds: number[];
+  leaderId?: number | null;
 }): Promise<ScheduleResult> {
   await requireAdmin();
   const parsed = z
@@ -58,12 +59,14 @@ export async function saveJob(input: {
       date: isoDate,
       time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
       durationMinutes: z.number().int().min(30).max(720).nullable(),
-      staffIds: z.array(staffId).max(10),
+      staffIds: z.array(staffId).max(50),
+      leaderId: staffId.nullable().optional(),
     })
     .safeParse(input);
   if (!parsed.success) return { ok: false, error: "Check the date, time and length." };
   const { date, time, durationMinutes } = parsed.data;
   const staffIds = [...new Set(parsed.data.staffIds)];
+  const leaderId = parsed.data.leaderId && staffIds.includes(parsed.data.leaderId) ? parsed.data.leaderId : null;
 
   const db = await getDb();
   const job = await editableJob(parsed.data.bookingId);
@@ -81,9 +84,18 @@ export async function saveJob(input: {
 
   await db.transaction(async (tx) => {
     await tx.update(schema.bookings).set({ date, timeSlot: time, durationMinutes }).where(eq(schema.bookings.id, job.id));
-    await tx.delete(schema.bookingAssignments).where(eq(schema.bookingAssignments.bookingId, job.id));
-    if (staffIds.length) {
-      await tx.insert(schema.bookingAssignments).values(staffIds.map((id) => ({ bookingId: job.id, staffId: id })));
+    // Remove only the people taken off; those who stay keep their check-in times.
+    const gone = current.map((c) => c.staffId).filter((id) => !staffIds.includes(id));
+    if (gone.length) {
+      await tx
+        .delete(schema.bookingAssignments)
+        .where(and(eq(schema.bookingAssignments.bookingId, job.id), inArray(schema.bookingAssignments.staffId, gone)));
+    }
+    for (const id of staffIds) {
+      await tx
+        .insert(schema.bookingAssignments)
+        .values({ bookingId: job.id, staffId: id, isLeader: id === leaderId })
+        .onConflictDoUpdate({ target: [schema.bookingAssignments.bookingId, schema.bookingAssignments.staffId], set: { isLeader: id === leaderId } });
     }
   });
 

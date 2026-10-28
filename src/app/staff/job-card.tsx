@@ -3,6 +3,7 @@ import { hoursLabel } from "@/lib/schedule";
 import type { StaffJob } from "@/lib/staff-jobs";
 import { ActionButton, Elapsed } from "./app-client";
 import { checkIn, checkOut } from "./actions";
+import { CrewList } from "./crew-list";
 
 const clock = (iso: string) =>
   new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Indian/Mauritius" }).format(new Date(iso));
@@ -74,11 +75,7 @@ export function JobCard({ job, isToday, highlight }: { job: StaffJob; isToday: b
           </p>
         )}
 
-        {job.teammates.length > 0 && (
-          <p className="flex items-center gap-2 text-sm text-ink-soft">
-            <Icon name="users" width={18} height={18} /> With {job.teammates.join(", ")}
-          </p>
-        )}
+        {job.crew.length > 1 && <CrewList crew={job.crew} />}
 
         {state === "todo" && (
           <form action={checkIn}>

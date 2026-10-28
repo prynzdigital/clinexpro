@@ -5,6 +5,7 @@ import { getService } from "@/content/services";
 import { getTown } from "@/content/towns";
 import en from "@/dictionaries/en";
 import { fromMinutes, jobMinutes, toMinutes } from "@/lib/schedule";
+import type { Mate } from "@/lib/staff-shifts";
 
 export type StaffJob = {
   id: number;
@@ -21,7 +22,8 @@ export type StaffJob = {
   details: string[];
   extras: string[];
   notes: string | null;
-  teammates: string[];
+  /** Everyone on the job, leader first (including the signed-in person). */
+  crew: Mate[];
   checkedInAt: string | null;
   checkedOutAt: string | null;
   report: string | null;
@@ -38,12 +40,12 @@ export async function myJobs(staffId: number, from: string, to: string): Promise
     .innerJoin(c, eq(b.customerId, c.id))
     .where(and(eq(a.staffId, staffId), ne(b.status, "cancelled"), gte(b.date, from), lte(b.date, to)))
     .orderBy(asc(b.date), asc(b.timeSlot));
-  const teammates = rows.length
+  const crew = rows.length
     ? await db
-        .select({ bookingId: a.bookingId, name: s.name })
+        .select({ bookingId: a.bookingId, staffId: a.staffId, isLeader: a.isLeader, name: s.name, phone: s.phone, color: s.color })
         .from(a)
         .innerJoin(s, eq(a.staffId, s.id))
-        .where(and(inArray(a.bookingId, rows.map((r) => r.booking.id)), ne(a.staffId, staffId)))
+        .where(inArray(a.bookingId, rows.map((r) => r.booking.id)))
     : [];
 
   return rows.map(({ booking, assignment, customer, phone }) => {
@@ -64,7 +66,10 @@ export async function myJobs(staffId: number, from: string, to: string): Promise
       details: Object.entries(counts).map(([k, v]) => `${en.booking.fields[k] ?? k}: ${v}`),
       extras: addons.map((x) => en.booking.addons[x] ?? x),
       notes: booking.notes,
-      teammates: teammates.filter((t) => t.bookingId === booking.id).map((t) => t.name),
+      crew: crew
+        .filter((c) => c.bookingId === booking.id)
+        .map((c) => ({ name: c.name, phone: c.phone, isLeader: c.isLeader, color: c.color, isMe: c.staffId === staffId }))
+        .sort((x, y) => Number(y.isLeader) - Number(x.isLeader) || x.name.localeCompare(y.name)),
       checkedInAt: assignment.checkedInAt?.toISOString() ?? null,
       checkedOutAt: assignment.checkedOutAt?.toISOString() ?? null,
       report: assignment.report,

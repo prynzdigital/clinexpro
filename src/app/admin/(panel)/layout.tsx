@@ -11,7 +11,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   const session = await requireAdmin();
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
-      <aside className="bg-navy text-white lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:flex-col">
+      <aside className="bg-navy text-white print:hidden lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:flex-col">
         <div className="flex h-16 items-center justify-between px-4 lg:h-20 lg:px-6">
           <Link href="/admin" aria-label="Clinex Pro admin home"><Logo variant="light" /></Link>
           <form action={logout} className="lg:hidden">
@@ -38,7 +38,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
           </form>
         </div>
       </aside>
-      <main className="min-w-0 flex-1 bg-surface-alt px-4 py-6 sm:px-8 sm:py-8">
+      <main className="min-w-0 flex-1 bg-surface-alt px-4 py-6 sm:px-8 sm:py-8 print:bg-white print:p-0">
         {session.mustChangePassword ? (
           // Signed in with a password someone else chose: nothing else until they pick their own.
           <section className="card mx-auto max-w-lg space-y-4 p-6">

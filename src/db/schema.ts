@@ -171,9 +171,86 @@ export const bookingAssignments = pgTable(
     checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
     checkedOutAt: timestamp("checked_out_at", { withTimezone: true }),
     report: text("report"),
+    // The crew leader for this job (one per job; others follow their lead).
+    isLeader: boolean("is_leader").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.bookingId, t.staffId] }), index("booking_assignments_staff_idx").on(t.staffId)],
+);
+
+// --- Contract work: sites, shifts and the roster -----------------------------
+// Hotels and offices are staffed by shifts at a site. Crews are not fixed:
+// each shift has its own people and leader; saved crews only speed up filling.
+
+export const sites = pgTable("sites", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  customerId: integer("customer_id").references(() => customers.id),
+  address: text("address"),
+  town: text("town"),
+  // Where to report, uniform, access cards... shown to the crew.
+  instructions: text("instructions"),
+  color: text("color").notNull(),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const shifts = pgTable(
+  "shifts",
+  {
+    id: serial("id").primaryKey(),
+    siteId: integer("site_id")
+      .notNull()
+      .references(() => sites.id),
+    date: date("date").notNull(),
+    // "HH:MM" in Mauritius time; an end before the start runs past midnight.
+    start: text("start").notNull(),
+    end: text("end").notNull(),
+    label: text("label"),
+    headcount: integer("headcount").notNull().default(1),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("shifts_date_idx").on(t.date)],
+);
+
+export const shiftAssignments = pgTable(
+  "shift_assignments",
+  {
+    shiftId: integer("shift_id")
+      .notNull()
+      .references(() => shifts.id, { onDelete: "cascade" }),
+    staffId: integer("staff_id")
+      .notNull()
+      .references(() => staff.id),
+    isLeader: boolean("is_leader").notNull().default(false),
+    // Clock in/out from the staff app (the office can correct them); timesheets use these.
+    clockInAt: timestamp("clock_in_at", { withTimezone: true }),
+    clockOutAt: timestamp("clock_out_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.shiftId, t.staffId] }), index("shift_assignments_staff_idx").on(t.staffId)],
+);
+
+// Saved crews: named groups the manager can drop onto a shift or job, then adjust.
+export const crews = pgTable("crews", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  leaderId: integer("leader_id").references(() => staff.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const crewMembers = pgTable(
+  "crew_members",
+  {
+    crewId: integer("crew_id")
+      .notNull()
+      .references(() => crews.id, { onDelete: "cascade" }),
+    staffId: integer("staff_id")
+      .notNull()
+      .references(() => staff.id, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.crewId, t.staffId] })],
 );
 
 // Invoices. Amounts are in cents (MUR × 100) so VAT is exact. A draft has no
@@ -268,6 +345,8 @@ export type Lead = typeof leads.$inferSelect;
 export type Payment = typeof payments.$inferSelect;
 export type AdminUser = typeof adminUsers.$inferSelect;
 export type Staff = typeof staff.$inferSelect;
+export type Site = typeof sites.$inferSelect;
+export type Shift = typeof shifts.$inferSelect;
 export type Invoice = typeof invoices.$inferSelect;
 export type InvoiceLine = typeof invoiceLines.$inferSelect;
 export type InvoicePayment = typeof invoicePayments.$inferSelect;

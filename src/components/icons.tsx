@@ -33,6 +33,7 @@ const paths = {
   wallet: "M3 7h15a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zm0 0 12-3v3m2 6h.01",
   trend: "M3 17l6-6 4 4 8-8m0 0h-5m5 0v5",
   alert: "M12 4 2 20h20zm0 6v4m0 3h.01",
+  roster: "M3 5h18v15H3zm0 4h18M8 3v4m8-4v4M7 13h3m4 0h3M7 16.5h3m4 0h3",
   badge: "M4 5h16v14H4zm5 4.5a2 2 0 1 0 0 .01M6 16a3 3 0 0 1 6 0m3-6h3m-3 3h3",
 } as const;
 

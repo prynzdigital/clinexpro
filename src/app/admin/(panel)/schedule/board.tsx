@@ -18,20 +18,23 @@ export type BoardJob = {
   town: string;
   status: "pending" | "confirmed" | "completed" | "cancelled";
   staffIds: number[];
+  leaderId: number | null;
   progress: "none" | "on-site" | "done";
 };
+
+type Crew = { id: number; name: string; leaderId: number | null; members: number[] };
 
 type Person = { id: number; name: string; color: string; active: boolean };
 
 type Change =
   | { kind: "move"; id: number; date: string; from: number | null; to: number | null }
-  | { kind: "save"; id: number; date: string; time: string; durationMinutes: number | null; staffIds: number[] };
+  | { kind: "save"; id: number; date: string; time: string; durationMinutes: number | null; staffIds: number[]; leaderId: number | null };
 
 function apply(jobs: BoardJob[], change: Change): BoardJob[] {
   return jobs.map((job) => {
     if (job.id !== change.id) return job;
     if (change.kind === "save") {
-      return { ...job, date: change.date, timeSlot: change.time, durationMinutes: change.durationMinutes, staffIds: change.staffIds };
+      return { ...job, date: change.date, timeSlot: change.time, durationMinutes: change.durationMinutes, staffIds: change.staffIds, leaderId: change.leaderId };
     }
     let staffIds = job.staffIds;
     if (change.from !== change.to) {
@@ -63,7 +66,7 @@ const STATUS_DOT: Record<BoardJob["status"], string> = {
   cancelled: "bg-zinc-400",
 };
 
-export function Board({ days, today, jobs, staff }: { days: string[]; today: string; jobs: BoardJob[]; staff: Person[] }) {
+export function Board({ days, today, jobs, staff, crews }: { days: string[]; today: string; jobs: BoardJob[]; staff: Person[]; crews: Crew[] }) {
   const [shown, change] = useOptimistic(jobs, apply);
   const [, startTransition] = useTransition();
   const [notice, setNotice] = useState<{ tone: "error" | "warning"; text: string } | null>(null);
@@ -242,6 +245,7 @@ export function Board({ days, today, jobs, staff }: { days: string[]; today: str
           key={editing.id}
           job={editing}
           staff={staff}
+          crews={crews}
           onClose={() => setEditingId(null)}
           onSave={(c) => {
             setEditingId(null);
@@ -295,7 +299,7 @@ function JobChip({
         <span className="mt-2 flex flex-wrap gap-1">
           {team.length ? (
             team.map((p) => (
-              <span key={p.id} className="rounded-full px-2 py-0.5 text-xs font-medium text-white" style={{ background: p.color }}>{p.name}</span>
+              <span key={p.id} className="rounded-full px-2 py-0.5 text-xs font-medium text-white" style={{ background: p.color }}>{job.leaderId === p.id ? "★ " : ""}{p.name}</span>
             ))
           ) : (
             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">Needs a cleaner</span>
@@ -310,16 +314,19 @@ function JobChip({
 function JobEditor({
   job,
   staff,
+  crews,
   onClose,
   onSave,
 }: {
   job: BoardJob;
   staff: Person[];
+  crews: Crew[];
   onClose: () => void;
-  onSave: (c: { date: string; time: string; durationMinutes: number | null; staffIds: number[] }) => void;
+  onSave: (c: { date: string; time: string; durationMinutes: number | null; staffIds: number[]; leaderId: number | null }) => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [team, setTeam] = useState(job.staffIds);
+  const [leader, setLeader] = useState<number | null>(job.leaderId);
   useEffect(() => {
     dialog.current?.showModal();
   }, []);
@@ -345,6 +352,7 @@ function JobEditor({
             time: String(f.get("time")),
             durationMinutes: length === "usual" ? null : Number(length),
             staffIds: team,
+            leaderId: leader && team.includes(leader) ? leader : null,
           });
         }}
       >
@@ -375,29 +383,56 @@ function JobEditor({
         </div>
 
         <fieldset>
-          <legend className="label">Team</legend>
+          <legend className="flex w-full flex-wrap items-center justify-between gap-2">
+            <span className="label">Crew <span className="font-normal text-ink-soft">· ★ = leader</span></span>
+            {crews.length > 0 && (
+              <select
+                aria-label="Fill from a saved crew"
+                value=""
+                onChange={(e) => {
+                  const c = crews.find((x) => x.id === Number(e.target.value));
+                  if (c) {
+                    setTeam(c.members);
+                    setLeader(c.leaderId);
+                  }
+                }}
+                className="field w-auto py-1.5 text-sm"
+              >
+                <option value="">Fill from saved crew…</option>
+                {crews.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.members.length})</option>)}
+              </select>
+            )}
+          </legend>
           {choosable.length === 0 ? (
             <p className="text-sm text-ink-soft">No staff yet. <Link href="/admin/staff" className="text-brand-strong underline">Add cleaners</Link> first.</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {choosable.map((p) => {
                 const on = team.includes(p.id);
+                const isLeader = on && leader === p.id;
                 return (
-                  <label
+                  <span
                     key={p.id}
-                    className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-sm ${on ? "border-transparent text-white" : "border-line bg-white"}`}
+                    className={`flex items-center overflow-hidden rounded-full border text-sm ${on ? "border-transparent text-white" : "border-line bg-white"}`}
                     style={on ? { background: p.color } : undefined}
                   >
-                    <input
-                      type="checkbox"
-                      className="sr-only"
-                      checked={on}
-                      onChange={() => setTeam((t) => (on ? t.filter((id) => id !== p.id) : [...t, p.id]))}
-                    />
-                    {!on && <span className="size-2.5 rounded-full" style={{ background: p.color }} aria-hidden />}
-                    {p.name}
-                    {!p.active && " (inactive)"}
-                  </label>
+                    <label className="flex cursor-pointer items-center gap-2 py-1.5 pl-3 pr-2">
+                      <input
+                        type="checkbox"
+                        className="sr-only"
+                        checked={on}
+                        onChange={() => setTeam((t) => (on ? t.filter((id) => id !== p.id) : [...t, p.id]))}
+                      />
+                      {!on && <span className="size-2.5 rounded-full" style={{ background: p.color }} aria-hidden />}
+                      {p.name}
+                      {!p.active && " (inactive)"}
+                    </label>
+                    {on && (
+                      <button type="button" onClick={() => setLeader(isLeader ? null : p.id)} aria-pressed={isLeader} aria-label={`${isLeader ? "Remove" : "Make"} ${p.name} leader`} className={`px-2 py-1.5 ${isLeader ? "text-yellow-300" : "text-white/60 hover:text-white"}`}>
+                        ★
+                      </button>
+                    )}
+                  </span>
                 );
               })}
             </div>

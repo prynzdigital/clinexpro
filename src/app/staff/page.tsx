@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/staff-auth";
-import { mauritiusDate } from "@/lib/dates";
+import { mauritiusDate, nowMs } from "@/lib/dates";
 import { addDays, hoursLabel, isIsoDate } from "@/lib/schedule";
 import { myJobs } from "@/lib/staff-jobs";
+import { myShifts } from "@/lib/staff-shifts";
+import { shiftWindow } from "@/lib/roster";
+import { ShiftCard } from "./shift-card";
 import { Icon } from "@/components/icons";
 import { InstallCard } from "./app-client";
 import { JobCard } from "./job-card";
@@ -30,11 +33,17 @@ export default async function StaffToday({ searchParams }: PageProps<"/staff">) 
   const { day: requested } = await searchParams;
   const day = isIsoDate(requested) && week.includes(requested) ? requested : today;
 
-  const all = await myJobs(me.id, today, week[6]);
+  const [all, allShifts] = await Promise.all([myJobs(me.id, today, week[6]), myShifts(me.id, addDays(today, -1), week[6])]);
   const jobs = all.filter((j) => j.date === day);
+  const now = nowMs();
+  // A night shift from yesterday stays on Today until it's over and clocked out.
+  const shifts = allShifts.filter(
+    (s) => s.date === day || (day === today && s.date === addDays(today, -1) && !s.clockOutAt && shiftWindow(s.date, s.start, s.end).to > now),
+  );
   const isToday = day === today;
-  const done = jobs.filter((j) => j.checkedOutAt).length;
-  const minutes = jobs.reduce((s, j) => s + j.minutes, 0);
+  const done = jobs.filter((j) => j.checkedOutAt).length + shifts.filter((s) => s.clockOutAt).length;
+  const minutes = jobs.reduce((s, j) => s + j.minutes, 0) + shifts.reduce((s, x) => s + x.minutes, 0);
+  const count = jobs.length + shifts.length;
   // The job to focus on: the one on site, else the first not started.
   const focus = isToday ? (jobs.find((j) => j.checkedInAt && !j.checkedOutAt) ?? jobs.find((j) => !j.checkedInAt)) : undefined;
   const p = parts(day);
@@ -68,21 +77,23 @@ export default async function StaffToday({ searchParams }: PageProps<"/staff">) 
       </nav>
 
       <section className="grid grid-cols-3 gap-2" aria-label="Summary">
-        <Summary icon="briefcase" value={String(jobs.length)} label={jobs.length === 1 ? "job" : "jobs"} tone="bg-white" />
+        <Summary icon="briefcase" value={String(count)} label={shifts.length ? (count === 1 ? "shift/job" : "shifts & jobs") : count === 1 ? "job" : "jobs"} tone="bg-white" />
         <Summary icon="clock" value={minutes ? hoursLabel(minutes) : "0h"} label="planned" tone="bg-white" />
-        <Summary icon="check" value={`${done}/${jobs.length}`} label="done" tone={jobs.length && done === jobs.length ? "bg-emerald-50 text-emerald-900" : "bg-white"} />
+        <Summary icon="check" value={`${done}/${count}`} label="done" tone={count && done === count ? "bg-emerald-50 text-emerald-900" : "bg-white"} />
       </section>
 
       {isToday && <InstallCard dismissible />}
 
-      {jobs.length === 0 ? (
+      {shifts.map((s) => <ShiftCard key={`s${s.id}`} shift={s} now={now} />)}
+
+      {count === 0 ? (
         <div className="rounded-3xl bg-white p-10 text-center">
           <span className="mx-auto grid size-14 place-items-center rounded-full bg-surface-alt text-ink-soft"><Icon name="sparkle" width={26} height={26} /></span>
           <p className="mt-3 font-semibold">No jobs {isToday ? "today" : "this day"}</p>
           <p className="text-sm text-ink-soft">The office will add them to your schedule.</p>
         </div>
       ) : (
-        jobs.map((job) => <JobCard key={job.id} job={job} isToday={isToday} highlight={job.id === focus?.id} />)
+        jobs.length > 0 && jobs.map((job) => <JobCard key={job.id} job={job} isToday={isToday} highlight={job.id === focus?.id} />)
       )}
     </StaffShell>
   );
