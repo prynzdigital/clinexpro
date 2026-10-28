@@ -4,6 +4,7 @@ import { getDb, schema } from "@/db";
 import { getService } from "@/content/services";
 import { getTown } from "@/content/towns";
 import en from "@/dictionaries/en";
+import fr from "@/dictionaries/fr";
 import { fromMinutes, jobMinutes, toMinutes } from "@/lib/schedule";
 import type { Mate } from "@/lib/staff-shifts";
 
@@ -30,7 +31,8 @@ export type StaffJob = {
 };
 
 /** The signed-in cleaner's own jobs between two dates (only what they need, nothing else). */
-export async function myJobs(staffId: number, from: string, to: string): Promise<StaffJob[]> {
+export async function myJobs(staffId: number, from: string, to: string, lang: "en" | "fr" = "en"): Promise<StaffJob[]> {
+  const dict = lang === "fr" ? fr : en;
   const db = await getDb();
   const { bookings: b, bookingAssignments: a, customers: c, staff: s } = schema;
   const rows = await db
@@ -58,13 +60,14 @@ export async function myJobs(staffId: number, from: string, to: string): Promise
       start: booking.timeSlot,
       end: fromMinutes(toMinutes(booking.timeSlot) + minutes),
       minutes,
-      service: getService(booking.service)?.name.en ?? booking.service,
+      service: getService(booking.service)?.name[lang] ?? booking.service,
       customer,
       phone,
       address: booking.address,
       town: getTown(booking.town)?.name ?? booking.town,
-      details: Object.entries(counts).map(([k, v]) => `${en.booking.fields[k] ?? k}: ${v}`),
-      extras: addons.map((x) => en.booking.addons[x] ?? x),
+      // French puts a space before the colon.
+      details: Object.entries(counts).map(([k, v]) => `${dict.booking.fields[k] ?? k}${lang === "fr" ? " : " : ": "}${v}`),
+      extras: addons.map((x) => dict.booking.addons[x] ?? x),
       notes: booking.notes,
       crew: crew
         .filter((c) => c.bookingId === booking.id)

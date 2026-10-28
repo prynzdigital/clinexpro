@@ -35,6 +35,7 @@ const paths = {
   alert: "M12 4 2 20h20zm0 6v4m0 3h.01",
   roster: "M3 5h18v15H3zm0 4h18M8 3v4m8-4v4M7 13h3m4 0h3M7 16.5h3m4 0h3",
   badge: "M4 5h16v14H4zm5 4.5a2 2 0 1 0 0 .01M6 16a3 3 0 0 1 6 0m3-6h3m-3 3h3",
+  globe: "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0zM3 12h18M12 3c2.5 2.5 3.8 5.5 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.5-3.8-9S9.5 5.5 12 3z",
 } as const;
 
 export type IconName = keyof typeof paths;

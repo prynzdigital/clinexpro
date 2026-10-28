@@ -4,7 +4,9 @@ import { and, eq, isNotNull, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { checkPassword } from "@/lib/passwords";
-import { startStaffSession } from "@/lib/staff-auth";
+import { STAFF_LANG_COOKIE, deviceStaffLang, rememberStaffLang, staffLang, startStaffSession } from "@/lib/staff-auth";
+import { cookies } from "next/headers";
+import { t } from "../i18n";
 import { toE164Digits } from "@/lib/notify/channels";
 
 const MAX_TRIES = 5;
@@ -14,10 +16,17 @@ const DUMMY_HASH = "$2b$12$J9juwAhENTnJ92b0Rthleuyh6g2rrXcFw280ctN6gafO1FaYUHwRi
 
 export type StaffLoginState = { error: string; phone: string };
 
+/** EN/FR toggle on the sign-in screen (before we know who it is). */
+export async function chooseLoginLang(formData: FormData) {
+  await rememberStaffLang(staffLang(String(formData.get("lang"))));
+  redirect("/staff/login");
+}
+
 export async function staffLogin(_prev: StaffLoginState, formData: FormData): Promise<StaffLoginState> {
   const phone = String(formData.get("phone") ?? "").trim();
   const pin = String(formData.get("pin") ?? "").replace(/\D/g, "");
-  const wrong = { error: "Wrong phone number or PIN.", phone };
+  const x = t(await deviceStaffLang()).login;
+  const wrong = { error: x.wrong, phone };
   const digits = toE164Digits(phone);
 
   const db = await getDb();
@@ -31,7 +40,7 @@ export async function staffLogin(_prev: StaffLoginState, formData: FormData): Pr
 
   if (person?.pinLockedUntil && person.pinLockedUntil > new Date()) {
     const minutes = Math.ceil((person.pinLockedUntil.getTime() - Date.now()) / 60000);
-    return { error: `Too many wrong PINs. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}, or ask the office for a new PIN.`, phone };
+    return { error: x.locked(minutes), phone };
   }
 
   const ok = await checkPassword(pin, person?.pinHash ?? DUMMY_HASH);
@@ -50,10 +59,14 @@ export async function staffLogin(_prev: StaffLoginState, formData: FormData): Pr
     return wrong;
   }
 
+  // A language picked on the sign-in screen wins; otherwise this phone follows the profile.
+  const picked = (await cookies()).get(STAFF_LANG_COOKIE)?.value;
+  const lang = picked ? staffLang(picked) : staffLang(person.lang);
   await db
     .update(schema.staff)
-    .set({ failedPinAttempts: 0, pinLockedUntil: null, lastLoginAt: new Date() })
+    .set({ failedPinAttempts: 0, pinLockedUntil: null, lastLoginAt: new Date(), lang })
     .where(eq(schema.staff.id, person.id));
+  await rememberStaffLang(lang);
   await startStaffSession(person);
   redirect("/staff");
 }

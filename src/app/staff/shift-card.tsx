@@ -4,12 +4,14 @@ import type { StaffShift } from "@/lib/staff-shifts";
 import { ActionButton, Elapsed } from "./app-client";
 import { clockIn, clockOut } from "./actions";
 import { CrewList } from "./crew-list";
+import { t, type Lang } from "./i18n";
 
 const clock = (iso: string) =>
   new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Indian/Mauritius" }).format(new Date(iso));
 
 /** A shift at a hotel or office: where, when, who with, and clock in/out. */
-export function ShiftCard({ shift, now }: { shift: StaffShift; now: number }) {
+export function ShiftCard({ shift, now, lang }: { shift: StaffShift; now: number; lang: Lang }) {
+  const x = t(lang).shift;
   const { from, to } = shiftWindow(shift.date, shift.start, shift.end);
   const state = shift.clockOutAt
     ? "done"
@@ -27,18 +29,18 @@ export function ShiftCard({ shift, now }: { shift: StaffShift; now: number }) {
     <article id={`shift-${shift.id}`} className="scroll-mt-28 overflow-hidden rounded-3xl bg-white shadow-sm">
       <header className="flex items-center justify-between gap-3 px-5 py-3 text-white" style={{ background: shift.site.color }}>
         <span className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide">
-          <Icon name="roster" width={18} height={18} /> {shift.label ?? "Shift"}
+          <Icon name="roster" width={18} height={18} /> {shift.label ?? x.shift}
         </span>
         <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold">
-          {state === "on" ? <>Clocked in · <Elapsed since={shift.clockInAt!} /></> : state === "done" ? `Done · ${hm(worked ?? 0)}` : state === "missed" ? "Not clocked in" : state === "open" ? "Clock-in open" : "Upcoming"}
+          {state === "on" ? <>{x.clockedIn} · <Elapsed since={shift.clockInAt!} /></> : state === "done" ? x.done(hm(worked ?? 0)) : state === "missed" ? x.notClocked : state === "open" ? x.open : x.upcoming}
         </span>
       </header>
       <div className="space-y-4 p-5">
         <div>
           <p className="text-2xl font-bold tabular-nums leading-none">
-            {shift.start} <span className="text-base font-normal text-ink-soft">to</span> {shift.end}
+            {shift.start} <span className="text-base font-normal text-ink-soft">{x.to}</span> {shift.end}
           </p>
-          <p className="mt-1 text-sm text-ink-soft">{hm(shift.minutes)}{shift.end <= shift.start ? " · ends next morning" : ""}</p>
+          <p className="mt-1 text-sm text-ink-soft">{hm(shift.minutes)}{shift.end <= shift.start ? x.nextMorning : ""}</p>
         </div>
 
         <div>
@@ -55,32 +57,32 @@ export function ShiftCard({ shift, now }: { shift: StaffShift; now: number }) {
 
         {(shift.site.instructions || shift.notes) && (
           <div className="space-y-2 rounded-2xl bg-amber-50 p-3 text-sm text-amber-950">
-            {shift.site.instructions && <p><span className="font-semibold">On arrival: </span>{shift.site.instructions}</p>}
-            {shift.notes && <p><span className="font-semibold">Today: </span>{shift.notes}</p>}
+            {shift.site.instructions && <p><span className="font-semibold">{x.arrival}</span>{shift.site.instructions}</p>}
+            {shift.notes && <p><span className="font-semibold">{x.todayNote}</span>{shift.notes}</p>}
           </div>
         )}
 
-        <CrewList crew={shift.crew} />
+        <CrewList crew={shift.crew} lang={lang} />
 
         {state === "open" && (
           <form action={clockIn}>
             <input type="hidden" name="shiftId" value={shift.id} />
-            <ActionButton label="Clock in" pendingLabel="Clocking in…" className="min-h-14 w-full rounded-2xl bg-brand text-lg font-bold text-white shadow-[0_10px_24px_-12px_rgba(209,64,0,0.9)]" />
+            <ActionButton label={x.clockIn} pendingLabel={x.clockingIn} className="min-h-14 w-full rounded-2xl bg-brand text-lg font-bold text-white shadow-[0_10px_24px_-12px_rgba(209,64,0,0.9)]" />
           </form>
         )}
         {state === "on" && (
           <form action={clockOut}>
             <input type="hidden" name="shiftId" value={shift.id} />
-            <ActionButton label="Clock out" pendingLabel="Clocking out…" className="min-h-14 w-full rounded-2xl bg-emerald-600 text-lg font-bold text-white shadow-[0_10px_24px_-12px_rgba(5,150,105,0.9)]" />
+            <ActionButton label={x.clockOut} pendingLabel={x.clockingOut} className="min-h-14 w-full rounded-2xl bg-emerald-600 text-lg font-bold text-white shadow-[0_10px_24px_-12px_rgba(5,150,105,0.9)]" />
           </form>
         )}
         {state === "done" && (
           <p className="rounded-2xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-900">
-            In {clock(shift.clockInAt!)} · out {clock(shift.clockOutAt!)} · {hm(worked ?? 0)} worked. Thank you!
+            {x.worked(clock(shift.clockInAt!), clock(shift.clockOutAt!), hm(worked ?? 0))}
           </p>
         )}
-        {state === "later" && <p className="text-center text-sm text-ink-soft">Clock-in opens {CLOCK_IN_EARLY_MINUTES} minutes before the start.</p>}
-        {state === "missed" && <p className="rounded-2xl bg-rose-50 p-3 text-sm text-rose-900">This shift has ended without a clock-in. Tell the office so your hours are counted.</p>}
+        {state === "later" && <p className="text-center text-sm text-ink-soft">{x.opensIn(CLOCK_IN_EARLY_MINUTES)}</p>}
+        {state === "missed" && <p className="rounded-2xl bg-rose-50 p-3 text-sm text-rose-900">{x.missed}</p>}
       </div>
     </article>
   );

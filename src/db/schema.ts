@@ -147,6 +147,8 @@ export const staff = pgTable("staff", {
   // Hex colour that marks this person's jobs on the schedule.
   color: text("color").notNull(),
   active: boolean("active").notNull().default(true),
+  // Staff app language ("en" or "fr"), also for messages sent to them.
+  lang: text("lang").notNull().default("en"),
   // Staff app sign-in: phone + 6-digit PIN set by an admin. Null = no app access.
   pinHash: text("pin_hash"),
   failedPinAttempts: integer("failed_pin_attempts").notNull().default(0),

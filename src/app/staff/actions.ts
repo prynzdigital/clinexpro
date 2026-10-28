@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { mauritiusDate } from "@/lib/dates";
-import { endStaffSession, requireStaff } from "@/lib/staff-auth";
+import { endStaffSession, rememberStaffLang, requireStaff, staffLang } from "@/lib/staff-auth";
 import { CLOCK_IN_EARLY_MINUTES, shiftWindow } from "@/lib/roster";
 
 const bookingId = z.coerce.number().int().positive();
@@ -112,6 +112,16 @@ export async function clockOut(formData: FormData) {
     .where(and(eq(schema.shiftAssignments.shiftId, id.data), eq(schema.shiftAssignments.staffId, me.id)));
   revalidatePath("/staff", "layout");
   revalidatePath("/admin", "layout");
+}
+
+/** Switch the app between English and French, on the profile and this phone. */
+export async function setStaffLang(formData: FormData) {
+  const me = await requireStaff();
+  const lang = staffLang(String(formData.get("lang")));
+  const db = await getDb();
+  await db.update(schema.staff).set({ lang }).where(eq(schema.staff.id, me.id));
+  await rememberStaffLang(lang);
+  revalidatePath("/staff", "layout");
 }
 
 export async function staffLogout() {

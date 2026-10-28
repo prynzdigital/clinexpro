@@ -60,7 +60,9 @@ function usePlatform() {
  * iPhone (Safari has no install button). Hidden once installed. On the Today
  * screen it can be dismissed; on the Me screen it stays.
  */
-export function InstallCard({ dismissible }: { dismissible?: boolean }) {
+export type InstallText = { title: string; body: string; notNow: string; ios: string[]; button: string; installed: string; elsewhere: string };
+
+export function InstallCard({ dismissible, text }: { dismissible?: boolean; text: InstallText }) {
   const flags = usePlatform();
   const [standalone, ios, canPrompt] = [flags[0] === "1", flags[1] === "1", flags[2] === "1"];
   const [hidden, setHidden] = useState(false);
@@ -75,7 +77,7 @@ export function InstallCard({ dismissible }: { dismissible?: boolean }) {
   if (standalone || hidden || (!ios && !canPrompt)) {
     return dismissible ? null : (
       <p className="flex items-center gap-2 rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-900">
-        <Icon name="check" width={18} height={18} /> {standalone ? "You're using the installed app." : "Open this page in Chrome or Safari on your phone to install the app."}
+        <Icon name="check" width={18} height={18} /> {standalone ? text.installed : text.elsewhere}
       </p>
     );
   }
@@ -92,20 +94,18 @@ export function InstallCard({ dismissible }: { dismissible?: boolean }) {
       <div className="flex items-start gap-4">
         <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/15"><Icon name="phone" width={24} height={24} /></span>
         <div className="min-w-0 flex-1">
-          <h2 className="text-lg font-bold">Install Clinex Staff</h2>
-          <p className="text-sm text-white/85">Open your jobs in one tap from your home screen, even with weak signal.</p>
+          <h2 className="text-lg font-bold">{text.title}</h2>
+          <p className="text-sm text-white/85">{text.body}</p>
         </div>
         {dismissible && (
-          <button type="button" onClick={dismiss} className="-mr-1 -mt-1 grid size-8 place-items-center rounded-full text-white/80 hover:bg-white/15" aria-label="Not now">
+          <button type="button" onClick={dismiss} className="-mr-1 -mt-1 grid size-8 place-items-center rounded-full text-white/80 hover:bg-white/15" aria-label={text.notNow}>
             <Icon name="close" width={18} height={18} />
           </button>
         )}
       </div>
       {ios ? (
         <ol className="mt-4 space-y-2 rounded-2xl bg-white/10 p-4 text-sm">
-          <li>1. Tap <strong>Share</strong> <span aria-hidden>⬆︎</span> at the bottom of Safari.</li>
-          <li>2. Choose <strong>Add to Home Screen</strong>.</li>
-          <li>3. Tap <strong>Add</strong>. Open Clinex Staff from your home screen.</li>
+          {text.ios.map((step, i) => <li key={step}>{i + 1}. {step}</li>)}
         </ol>
       ) : (
         <button
@@ -121,7 +121,7 @@ export function InstallCard({ dismissible }: { dismissible?: boolean }) {
           }}
           className="mt-4 min-h-12 w-full rounded-full bg-white text-base font-bold text-brand-strong shadow"
         >
-          Install app
+          {text.button}
         </button>
       )}
     </section>
@@ -138,12 +138,12 @@ const subscribeOnline = (cb: () => void) => {
 };
 
 /** Thin banner while the phone has no connection. */
-export function OfflineBar() {
+export function OfflineBar({ text }: { text: string }) {
   const online = useSyncExternalStore(subscribeOnline, () => navigator.onLine, () => true);
   if (online) return null;
   return (
     <p role="status" className="bg-amber-400 px-4 py-2 text-center text-sm font-semibold text-amber-950">
-      No signal: showing your jobs as last loaded. Check-in needs a connection.
+      {text}
     </p>
   );
 }
@@ -173,7 +173,7 @@ export function ActionButton({ label, pendingLabel, className }: { label: string
 }
 
 /** Signs out and wipes the offline copy of the job pages from this phone. */
-export function SignOutButton({ action }: { action: () => Promise<void> }) {
+export function SignOutButton({ action, label }: { action: () => Promise<void>; label: string }) {
   return (
     <form
       action={action}
@@ -183,7 +183,7 @@ export function SignOutButton({ action }: { action: () => Promise<void> }) {
       }}
     >
       <button type="submit" className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-white font-semibold text-danger">
-        <Icon name="logout" width={18} height={18} /> Sign out
+        <Icon name="logout" width={18} height={18} /> {label}
       </button>
     </form>
   );

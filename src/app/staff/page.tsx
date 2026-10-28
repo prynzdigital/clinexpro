@@ -11,24 +11,16 @@ import { Icon, type IconName } from "@/components/icons";
 import { ActionButton, Elapsed, InstallCard } from "./app-client";
 import { clockIn, clockOut, checkIn } from "./actions";
 import { StaffShell } from "./shell";
+import { greeting, longDate, t, type Lang, type StaffText } from "./i18n";
+import { staffTitle } from "./titles";
 
-export const metadata = { title: "Home" };
+export const generateMetadata = staffTitle("home");
 
-const LONG_DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-const longDate = (iso: string) => {
-  const d = new Date(`${iso}T00:00:00Z`);
-  return `${LONG_DAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
-};
-const greeting = () => {
-  const hour = Number(new Intl.DateTimeFormat("en-GB", { hour: "numeric", hourCycle: "h23", timeZone: "Indian/Mauritius" }).format(new Date()));
-  return hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-};
 const initials = (name: string) => name.trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
-const until = (ms: number) => {
+const until = (ms: number, x: StaffText) => {
   const mins = Math.round(ms / 60_000);
-  if (mins <= 0) return "now";
-  return mins >= 60 ? `in ${Math.floor(mins / 60)} h ${mins % 60 ? `${mins % 60} min` : ""}`.trim() : `in ${mins} min`;
+  if (mins <= 0) return x.now.nowWord;
+  return mins >= 60 ? x.now.inHours(Math.floor(mins / 60), mins % 60) : x.now.inMin(mins);
 };
 
 /** One thing on the plan today: a shift or a job, in a common shape for the dashboard. */
@@ -53,12 +45,13 @@ type Item = {
 
 export default async function StaffHome() {
   const me = await requireStaff();
+  const x = t(me.lang);
   const today = mauritiusDate();
   const now = nowMs();
   const [jobs, shifts, month] = await Promise.all([
-    myJobs(me.id, today, addDays(today, 6)),
+    myJobs(me.id, today, addDays(today, 6), me.lang),
     myShifts(me.id, addDays(today, -1), addDays(today, 6)),
-    myMonth(me.id, today.slice(0, 7), today),
+    myMonth(me.id, today.slice(0, 7), today, me.lang),
   ]);
 
   const items: Item[] = [
@@ -68,7 +61,7 @@ export default async function StaffHome() {
       kind: "shift" as const,
       id: s.id,
       date: s.date,
-      title: `${s.label ?? "Shift"} at ${s.site.name}`,
+      title: x.now.shiftAt(s.label ?? x.shift.shift, s.site.name),
       place: [s.site.address, s.site.town].filter(Boolean).join(", ") || s.site.name,
       mapsQuery: [s.site.name, s.site.address, s.site.town, "Mauritius"].filter(Boolean).join(", "),
       start: s.start,
@@ -112,24 +105,24 @@ export default async function StaffHome() {
   const weekMinutes = items.filter((i) => i.date >= today).reduce((s, i) => s + Math.round((i.to - i.from) / 60_000), 0);
   const crewToday = [...new Map(todays.flatMap((i) => i.crew).filter((c) => !c.isMe).map((c) => [c.name, c])).values()];
   const firstName = me.name.split(" ")[0];
-  const problemText = encodeURIComponent(`Hi, it's ${me.name}. I have a problem${focus ? ` at ${focus.title} (${focus.start})` : ""}: `);
+  const problemText = encodeURIComponent(x.quick.reportText(me.name, focus ? ` (${focus.title}, ${focus.start})` : ""));
 
   return (
-    <StaffShell me={me} tab="home" title={`${greeting()}, ${firstName}`} subtitle={longDate(today)}>
+    <StaffShell me={me} tab="home" title={`${greeting(me.lang)}, ${firstName}`} subtitle={longDate(today, me.lang)}>
       {/* The one thing to do now. */}
-      <NowCard item={focus} current={Boolean(current)} now={now} later={later} allDone={todays.length > 0 && doneToday === todays.length} />
+      <NowCard item={focus} current={Boolean(current)} now={now} later={later} allDone={todays.length > 0 && doneToday === todays.length} lang={me.lang} />
 
       <section aria-label="Shortcuts" className="grid grid-cols-2 gap-3">
-        <Tile href="/staff/today" icon="clock" tone="bg-sky-500" title="Today" value={todays.length ? `${todays.length} ${todays.length === 1 ? "item" : "items"}` : "Free"} note={todays.length ? `${doneToday} done` : "nothing planned"} />
-        <Tile href="/staff/week" icon="calendar" tone="bg-violet-500" title="This week" value={hoursLabel(weekMinutes) || "0h"} note={`${items.filter((i) => i.date >= today).length} planned`} />
-        <Tile href="/staff/hours" icon="trend" tone="bg-emerald-500" title="My hours" value={hm(month.workedMinutes)} note={`worked in ${MONTHS[Number(today.slice(5, 7)) - 1]}`} />
+        <Tile href="/staff/today" icon="clock" tone="bg-sky-500" title={x.tiles.today} value={todays.length ? x.tiles.items(todays.length) : x.tiles.free} note={todays.length ? x.tiles.done(doneToday) : x.tiles.nothingPlanned} />
+        <Tile href="/staff/week" icon="calendar" tone="bg-violet-500" title={x.tiles.week} value={hoursLabel(weekMinutes) || "0h"} note={x.tiles.planned(items.filter((i) => i.date >= today).length)} />
+        <Tile href="/staff/hours" icon="trend" tone="bg-emerald-500" title={x.tiles.hours} value={hm(month.workedMinutes)} note={x.tiles.workedIn(x.months[Number(today.slice(5, 7)) - 1])} />
         <Link href={focus ? `/staff/today#${focus.anchor}` : "/staff/today"} className="flex min-h-32 flex-col justify-between rounded-3xl bg-white p-4 shadow-sm active:scale-[0.98]">
           <span className="flex items-center justify-between">
             <span className="grid size-10 place-items-center rounded-2xl bg-amber-500 text-white"><Icon name="users" width={20} height={20} /></span>
             <Icon name="arrow" width={16} height={16} className="text-ink-soft" />
           </span>
           <span>
-            <span className="block text-sm font-semibold">My crew today</span>
+            <span className="block text-sm font-semibold">{x.tiles.crew}</span>
             {crewToday.length ? (
               <span className="mt-1 flex -space-x-2">
                 {crewToday.slice(0, 5).map((c) => (
@@ -140,7 +133,7 @@ export default async function StaffHome() {
                 {crewToday.length > 5 && <span className="grid size-8 place-items-center rounded-full bg-surface-alt text-[10px] font-bold ring-2 ring-white">+{crewToday.length - 5}</span>}
               </span>
             ) : (
-              <span className="block text-xs text-ink-soft">{todays.length ? "Working solo" : "No work today"}</span>
+              <span className="block text-xs text-ink-soft">{todays.length ? x.tiles.solo : x.tiles.noWork}</span>
             )}
           </span>
         </Link>
@@ -150,19 +143,19 @@ export default async function StaffHome() {
         <QuickAction
           href={focus ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(focus.mapsQuery)}` : undefined}
           icon="pin"
-          label="Directions"
+          label={x.quick.directions}
           tone="bg-sky-50 text-sky-800"
           external
         />
-        <QuickAction href={BUSINESS.phoneHref} icon="phone" label="Call office" tone="bg-emerald-50 text-emerald-800" />
-        <QuickAction href={`${BUSINESS.whatsappHref}?text=${problemText}`} icon="alert" label="Report issue" tone="bg-rose-50 text-rose-800" external />
+        <QuickAction href={BUSINESS.phoneHref} icon="phone" label={x.quick.call} tone="bg-emerald-50 text-emerald-800" />
+        <QuickAction href={`${BUSINESS.whatsappHref}?text=${problemText}`} icon="alert" label={x.quick.report} tone="bg-rose-50 text-rose-800" external />
       </section>
 
       {todays.length > 0 && (
-        <section className="overflow-hidden rounded-3xl bg-white shadow-sm" aria-label="Today's plan">
+        <section className="overflow-hidden rounded-3xl bg-white shadow-sm" aria-label={x.plan.title}>
           <h2 className="flex items-center justify-between px-5 pt-4 pb-2">
-            <span className="font-bold">Today&apos;s plan</span>
-            <Link href="/staff/today" className="text-sm font-semibold text-brand-strong">Open →</Link>
+            <span className="font-bold">{x.plan.title}</span>
+            <Link href="/staff/today" className="text-sm font-semibold text-brand-strong">{x.plan.open}</Link>
           </h2>
           <ol className="relative px-5 pb-4">
             {todays.map((i, n) => {
@@ -182,7 +175,7 @@ export default async function StaffHome() {
                       <span className="shrink-0 text-sm tabular-nums text-ink-soft">{i.start}–{i.end}</span>
                     </span>
                     <span className="block truncate text-sm text-ink-soft">
-                      {state === "done" ? "Done" : state === "on" ? "On site now" : state === "missed" ? "Not checked in" : i.kind === "shift" ? "Shift" : "Job"} · {i.place}
+                      {state === "done" ? x.plan.done : state === "on" ? x.plan.onSite : state === "missed" ? x.plan.missed : i.kind === "shift" ? x.plan.shift : x.plan.job} · {i.place}
                     </span>
                   </Link>
                 </li>
@@ -196,30 +189,31 @@ export default async function StaffHome() {
         <Link href="/staff/hours" className="flex items-center gap-3 rounded-3xl bg-amber-50 p-4 text-sm text-amber-950 shadow-sm">
           <Icon name="alert" width={20} height={20} className="shrink-0 text-amber-600" />
           <span className="flex-1">
-            {month.missing > 0 && <>{month.missing} {month.missing === 1 ? "shift or job has" : "shifts or jobs have"} no clock-out this month. </>}
-            {month.late > 0 && <>{month.late} late {month.late === 1 ? "arrival" : "arrivals"}. </>}
-            Tap to check.
+            {month.missing > 0 && x.heads.missing(month.missing)}
+            {month.late > 0 && x.heads.late(month.late)}
+            {x.heads.check}
           </span>
           <Icon name="arrow" width={16} height={16} />
         </Link>
       )}
 
-      <InstallCard dismissible />
+      <InstallCard dismissible text={x.install} />
     </StaffShell>
   );
 }
 
-function NowCard({ item, current, now, later, allDone }: { item: Item | undefined; current: boolean; now: number; later: Item | undefined; allDone: boolean }) {
+function NowCard({ item, current, now, later, allDone, lang }: { item: Item | undefined; current: boolean; now: number; later: Item | undefined; allDone: boolean; lang: Lang }) {
+  const x = t(lang);
   if (!item) {
     return (
       <section className="rounded-3xl bg-gradient-to-br from-emerald-500 to-emerald-700 p-5 text-white shadow-lg">
-        <p className="text-sm font-semibold uppercase tracking-wide text-white/80">{allDone ? "All done today" : "Nothing planned today"}</p>
-        <p className="mt-1 text-2xl font-bold">{allDone ? "Great work, thank you!" : "Enjoy your day off"}</p>
+        <p className="text-sm font-semibold uppercase tracking-wide text-white/80">{allDone ? x.now.allDone : x.now.nothing}</p>
+        <p className="mt-1 text-2xl font-bold">{allDone ? x.now.thanks : x.now.dayOff}</p>
         {later && (
           <Link href={`/staff/today?day=${later.date}#${later.anchor}`} className="mt-4 flex items-center justify-between rounded-2xl bg-white/15 p-3 text-sm">
             <span>
-              <span className="block text-white/80">Next up</span>
-              <span className="font-semibold">{longDate(later.date)} · {later.start} · {later.title}</span>
+              <span className="block text-white/80">{x.now.nextUp}</span>
+              <span className="font-semibold">{longDate(later.date, lang)} · {later.start} · {later.title}</span>
             </span>
             <Icon name="arrow" width={18} height={18} />
           </Link>
@@ -236,7 +230,7 @@ function NowCard({ item, current, now, later, allDone }: { item: Item | undefine
     <section className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${tone} p-5 text-white shadow-lg`}>
       <span className="absolute inset-y-0 left-0 w-2" style={{ background: item.color }} aria-hidden />
       <p className="text-sm font-semibold uppercase tracking-wide text-white/80">
-        {current ? <>On site now · <Elapsed since={item.inAt!} /></> : item.from > now ? `Next up · starts ${until(item.from - now)}` : "Next up · started"}
+        {current ? <>{x.now.onSite} · <Elapsed since={item.inAt!} /></> : item.from > now ? x.now.nextIn(until(item.from - now, x)) : x.now.nextStarted}
       </p>
       <p className="mt-1 text-2xl font-bold leading-tight">{item.title}</p>
       <p className="mt-2 flex items-center gap-2 text-sm text-white/90">
@@ -250,33 +244,33 @@ function NowCard({ item, current, now, later, allDone }: { item: Item | undefine
         {item.kind === "shift" && current && (
           <form action={clockOut}>
             <input type="hidden" name="shiftId" value={item.id} />
-            <ActionButton label="Clock out" pendingLabel="Clocking out…" className="min-h-14 w-full rounded-2xl bg-white text-lg font-bold text-brand-strong shadow" />
+            <ActionButton label={x.shift.clockOut} pendingLabel={x.shift.clockingOut} className="min-h-14 w-full rounded-2xl bg-white text-lg font-bold text-brand-strong shadow" />
           </form>
         )}
         {item.kind === "shift" && !current && canClockIn && (
           <form action={clockIn}>
             <input type="hidden" name="shiftId" value={item.id} />
-            <ActionButton label="Clock in" pendingLabel="Clocking in…" className="min-h-14 w-full rounded-2xl bg-brand text-lg font-bold text-white shadow-[0_10px_24px_-12px_rgba(252,81,29,0.9)]" />
+            <ActionButton label={x.shift.clockIn} pendingLabel={x.shift.clockingIn} className="min-h-14 w-full rounded-2xl bg-brand text-lg font-bold text-white shadow-[0_10px_24px_-12px_rgba(252,81,29,0.9)]" />
           </form>
         )}
         {item.kind === "job" && !current && open && (
           <form action={checkIn}>
             <input type="hidden" name="bookingId" value={item.id} />
-            <ActionButton label="I've arrived · Check in" pendingLabel="Checking in…" className="min-h-14 w-full rounded-2xl bg-brand text-lg font-bold text-white shadow-[0_10px_24px_-12px_rgba(252,81,29,0.9)]" />
+            <ActionButton label={x.job.checkIn} pendingLabel={x.job.checkingIn} className="min-h-14 w-full rounded-2xl bg-brand text-lg font-bold text-white shadow-[0_10px_24px_-12px_rgba(252,81,29,0.9)]" />
           </form>
         )}
         {item.kind === "job" && current && (
           <Link href={`/staff/today#${item.anchor}`} className="grid min-h-14 place-items-center rounded-2xl bg-white text-lg font-bold text-brand-strong shadow">
-            Finish job · Check out
+            {x.job.finish}
           </Link>
         )}
         {!current && !open && (
           <p className="rounded-2xl bg-white/10 p-3 text-center text-sm">
-            {item.kind === "shift" ? "Clock-in" : "Check-in"} opens {CLOCK_IN_EARLY_MINUTES} min before the start.
+            {x.now.opens(item.kind, CLOCK_IN_EARLY_MINUTES)}
           </p>
         )}
         <Link href={`/staff/today#${item.anchor}`} className="grid min-h-12 place-items-center rounded-2xl bg-white/10 text-sm font-semibold ring-1 ring-white/20">
-          See details, crew &amp; notes
+          {x.now.details}
         </Link>
       </div>
     </section>

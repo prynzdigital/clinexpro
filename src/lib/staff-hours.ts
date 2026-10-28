@@ -19,10 +19,10 @@ export type WorkedEntry = {
 };
 
 /** What a cleaner worked in a month: shifts (clock times) and jobs (check-in/out). */
-export async function myMonth(staffId: number, month: string, today: string) {
+export async function myMonth(staffId: number, month: string, today: string, lang: "en" | "fr" = "en") {
   const { from, to } = monthRange(month);
   const until = to < today ? to : today;
-  const [shifts, jobs] = await Promise.all([myShifts(staffId, from, until), myJobs(staffId, from, until)]);
+  const [shifts, jobs] = await Promise.all([myShifts(staffId, from, until), myJobs(staffId, from, until, lang)]);
   const now = Date.now();
 
   const entries: WorkedEntry[] = [

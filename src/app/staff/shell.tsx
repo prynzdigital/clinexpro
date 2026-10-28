@@ -2,15 +2,16 @@ import Link from "next/link";
 import { Icon, type IconName } from "@/components/icons";
 import { OfflineBar } from "./app-client";
 import { StaffBackdrop } from "./backdrop";
+import { t, type Lang } from "./i18n";
 
 type Tab = "home" | "today" | "week" | "hours" | "me";
 
-const TABS: { href: string; label: string; icon: IconName; key: Tab }[] = [
-  { href: "/staff", label: "Home", icon: "home", key: "home" },
-  { href: "/staff/today", label: "Today", icon: "clock", key: "today" },
-  { href: "/staff/week", label: "Week", icon: "calendar", key: "week" },
-  { href: "/staff/hours", label: "Hours", icon: "trend", key: "hours" },
-  { href: "/staff/me", label: "Me", icon: "person", key: "me" },
+const TABS: { href: string; icon: IconName; key: Tab }[] = [
+  { href: "/staff", icon: "home", key: "home" },
+  { href: "/staff/today", icon: "clock", key: "today" },
+  { href: "/staff/week", icon: "calendar", key: "week" },
+  { href: "/staff/hours", icon: "trend", key: "hours" },
+  { href: "/staff/me", icon: "person", key: "me" },
 ];
 
 export const initials = (name: string) =>
@@ -30,14 +31,15 @@ export function StaffShell({
   subtitle,
   children,
 }: {
-  me: { name: string; color: string };
+  me: { name: string; color: string; lang: Lang };
   tab: Tab;
   title: string;
   subtitle?: string;
   children: React.ReactNode;
 }) {
+  const x = t(me.lang);
   return (
-    <div className="relative isolate mx-auto flex min-h-svh max-w-lg flex-col">
+    <div lang={me.lang} className="relative isolate mx-auto flex min-h-svh max-w-lg flex-col">
       <StaffBackdrop tone="light" />
       {/* See-through navy: the photo shows behind the header. */}
       <header className="sticky top-0 z-20 bg-navy/75 px-5 backdrop-blur-md pt-[max(1rem,env(safe-area-inset-top))] pb-5 text-white shadow-lg shadow-navy/20">
@@ -51,26 +53,26 @@ export function StaffShell({
           </div>
         </div>
       </header>
-      <OfflineBar />
+      <OfflineBar text={x.offline} />
       <main className="flex-1 space-y-4 px-4 pt-4 pb-28">{children}</main>
       <nav
-        aria-label="Staff app"
+        aria-label={x.nav}
         className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
       >
         <ul className="mx-auto grid max-w-lg grid-cols-5">
-          {TABS.map((t) => {
-            const active = t.key === tab;
+          {TABS.map((tb) => {
+            const active = tb.key === tab;
             return (
-              <li key={t.key}>
+              <li key={tb.key}>
                 <Link
-                  href={t.href}
+                  href={tb.href}
                   aria-current={active ? "page" : undefined}
                   className={`flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-semibold ${active ? "text-brand-strong" : "text-ink-soft"}`}
                 >
                   <span className={`grid h-8 w-12 place-items-center rounded-full transition-colors ${active ? "bg-brand text-white shadow-[0_6px_14px_-6px_rgba(209,64,0,0.9)]" : ""}`}>
-                    <Icon name={t.icon} width={22} height={22} />
+                    <Icon name={tb.icon} width={22} height={22} />
                   </span>
-                  {t.label}
+                  {x.tabs[tb.key]}
                 </Link>
               </li>
             );

@@ -3,11 +3,13 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/icons";
 import { staffLogin, type StaffLoginState } from "./actions";
+import { t, type Lang } from "../i18n";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "clear", "0", "back"] as const;
 
 /** Mobile number, then a 6-digit PIN on a big keypad (also works with a keyboard). */
-export function StaffLoginForm() {
+export function StaffLoginForm({ lang }: { lang: Lang }) {
+  const x = t(lang).login;
   const [state, action, pending] = useActionState<StaffLoginState, FormData>(staffLogin, { error: "", phone: "" });
   const [pin, setPin] = useState("");
   const [shake, setShake] = useState(0);
@@ -50,7 +52,7 @@ export function StaffLoginForm() {
   return (
     <form ref={form} action={action} className="flex flex-1 flex-col">
       <label className="block">
-        <span className="mb-1.5 block text-sm font-medium text-white/80">Mobile number</span>
+        <span className="mb-1.5 block text-sm font-medium text-white/80">{x.phone}</span>
         <span className="flex items-center gap-2 rounded-2xl bg-white/10 px-4 ring-1 ring-white/15 backdrop-blur-md focus-within:ring-2 focus-within:ring-accent">
           <Icon name="phone" width={18} height={18} className="text-white/60" />
           <input
@@ -68,8 +70,8 @@ export function StaffLoginForm() {
       </label>
 
       <input type="hidden" name="pin" value={pin} />
-      <p className="mt-6 text-center text-sm font-medium text-white/80">Your 6-digit PIN</p>
-      <div key={shake} className={`mt-3 flex justify-center gap-3 ${shake ? "animate-shake" : ""}`} aria-live="polite" aria-label={`${pin.length} of 6 digits entered`}>
+      <p className="mt-6 text-center text-sm font-medium text-white/80">{x.pin}</p>
+      <div key={shake} className={`mt-3 flex justify-center gap-3 ${shake ? "animate-shake" : ""}`} aria-live="polite" aria-label={x.digits(pin.length)}>
         {Array.from({ length: 6 }, (_, i) => (
           <span key={i} className={`size-4 rounded-full transition-all ${i < pin.length ? "scale-110 bg-accent" : "bg-white/20"}`} />
         ))}
@@ -85,10 +87,10 @@ export function StaffLoginForm() {
             key={k}
             type="button"
             onClick={() => press(k)}
-            aria-label={k === "back" ? "Delete last digit" : k === "clear" ? "Clear PIN" : k}
+            aria-label={k === "back" ? x.del : k === "clear" ? x.clearPin : k}
             className={`grid h-16 place-items-center rounded-2xl text-2xl font-semibold transition active:scale-95 ${k === "back" || k === "clear" ? "text-base text-white/70" : "bg-white/10 text-white ring-1 ring-white/10 backdrop-blur-md hover:bg-white/15"}`}
           >
-            {k === "back" ? <Icon name="arrow" width={22} height={22} className="rotate-180" /> : k === "clear" ? "Clear" : k}
+            {k === "back" ? <Icon name="arrow" width={22} height={22} className="rotate-180" /> : k === "clear" ? x.clear : k}
           </button>
         ))}
       </div>
@@ -98,7 +100,7 @@ export function StaffLoginForm() {
         disabled={pending || pin.length !== 6}
         className="mt-6 min-h-14 w-full rounded-full bg-brand text-lg font-bold text-white shadow-[0_10px_30px_-10px_rgba(252,81,29,0.9)] disabled:opacity-40"
       >
-        {pending ? "Signing in…" : "Sign in"}
+        {pending ? x.signingIn : x.signIn}
       </button>
     </form>
   );

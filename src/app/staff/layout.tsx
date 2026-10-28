@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Roboto } from "next/font/google";
 import "../globals.css";
 import { StaffPwa } from "./app-client";
+import { deviceStaffLang } from "@/lib/staff-auth";
 
 const roboto = Roboto({ subsets: ["latin"], variable: "--font-roboto" });
 
@@ -24,9 +25,9 @@ export const viewport: Viewport = {
 };
 
 // Cleaners' phone app: its own root layout, separate from the website and admin.
-export default function StaffRootLayout({ children }: LayoutProps<"/staff">) {
+export default async function StaffRootLayout({ children }: LayoutProps<"/staff">) {
   return (
-    <html lang="en" className={`${roboto.variable} h-full antialiased`}>
+    <html lang={await deviceStaffLang()} className={`${roboto.variable} h-full antialiased`}>
       <body className="min-h-full bg-navy font-sans text-ink">
         <StaffPwa />
         {children}
