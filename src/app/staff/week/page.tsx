@@ -37,7 +37,7 @@ export default async function StaffWeek() {
                   const leader = s.crew.find((c) => c.isLeader);
                   return (
                     <li key={`s${s.id}`}>
-                      <Link href={d === today ? "/staff" : `/staff?day=${d}`} className="flex items-center gap-4 overflow-hidden rounded-2xl bg-white p-4 shadow-sm active:scale-[0.99]" style={{ borderLeft: `6px solid ${s.site.color}` }}>
+                      <Link href={d === today ? "/staff/today" : `/staff/today?day=${d}`} className="flex items-center gap-4 overflow-hidden rounded-2xl bg-white p-4 shadow-sm active:scale-[0.99]" style={{ borderLeft: `6px solid ${s.site.color}` }}>
                         <span className="w-14 shrink-0">
                           <span className="block text-lg font-bold tabular-nums leading-none">{s.start}</span>
                           <span className="text-xs text-ink-soft">to {s.end}</span>
@@ -61,7 +61,7 @@ export default async function StaffWeek() {
               <ul className="space-y-2">
                 {list.map((j) => (
                   <li key={j.id}>
-                    <Link href={d === today ? "/staff" : `/staff?day=${d}`} className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm active:scale-[0.99]">
+                    <Link href={d === today ? "/staff/today" : `/staff/today?day=${d}`} className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm active:scale-[0.99]">
                       <span className="w-14 shrink-0">
                         <span className="block text-lg font-bold tabular-nums leading-none">{j.start}</span>
                         <span className="text-xs text-ink-soft">{hoursLabel(j.minutes)}</span>

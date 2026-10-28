@@ -27,7 +27,7 @@ export function JobCard({ job, isToday, highlight }: { job: StaffJob; isToday: b
   const s = STATE[state];
 
   return (
-    <article className={`relative overflow-hidden rounded-3xl bg-white shadow-sm ${highlight ? "ring-2 ring-brand" : ""}`}>
+    <article id={`job-${job.id}`} className={`relative scroll-mt-28 overflow-hidden rounded-3xl bg-white shadow-sm ${highlight ? "ring-2 ring-brand" : ""}`}>
       <span className={`absolute inset-y-0 left-0 w-1.5 ${s.bar}`} aria-hidden />
       <div className="space-y-4 p-5 pl-6">
         <div className="flex items-start justify-between gap-3">

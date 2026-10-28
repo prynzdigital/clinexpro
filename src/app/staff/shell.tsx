@@ -3,9 +3,13 @@ import { Icon, type IconName } from "@/components/icons";
 import { OfflineBar } from "./app-client";
 import { StaffBackdrop } from "./backdrop";
 
-const TABS: { href: string; label: string; icon: IconName; key: "today" | "week" | "me" }[] = [
-  { href: "/staff", label: "Today", icon: "clock", key: "today" },
+type Tab = "home" | "today" | "week" | "hours" | "me";
+
+const TABS: { href: string; label: string; icon: IconName; key: Tab }[] = [
+  { href: "/staff", label: "Home", icon: "home", key: "home" },
+  { href: "/staff/today", label: "Today", icon: "clock", key: "today" },
   { href: "/staff/week", label: "Week", icon: "calendar", key: "week" },
+  { href: "/staff/hours", label: "Hours", icon: "trend", key: "hours" },
   { href: "/staff/me", label: "Me", icon: "person", key: "me" },
 ];
 
@@ -27,7 +31,7 @@ export function StaffShell({
   children,
 }: {
   me: { name: string; color: string };
-  tab: "today" | "week" | "me";
+  tab: Tab;
   title: string;
   subtitle?: string;
   children: React.ReactNode;
@@ -53,7 +57,7 @@ export function StaffShell({
         aria-label="Staff app"
         className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
       >
-        <ul className="mx-auto grid max-w-lg grid-cols-3">
+        <ul className="mx-auto grid max-w-lg grid-cols-5">
           {TABS.map((t) => {
             const active = t.key === tab;
             return (
@@ -61,9 +65,9 @@ export function StaffShell({
                 <Link
                   href={t.href}
                   aria-current={active ? "page" : undefined}
-                  className={`flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-semibold ${active ? "text-brand-strong" : "text-ink-soft"}`}
+                  className={`flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-semibold ${active ? "text-brand-strong" : "text-ink-soft"}`}
                 >
-                  <span className={`grid h-8 w-14 place-items-center rounded-full transition-colors ${active ? "bg-brand-soft" : ""}`}>
+                  <span className={`grid h-8 w-12 place-items-center rounded-full transition-colors ${active ? "bg-brand text-white shadow-[0_6px_14px_-6px_rgba(209,64,0,0.9)]" : ""}`}>
                     <Icon name={t.icon} width={22} height={22} />
                   </span>
                   {t.label}

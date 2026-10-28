@@ -24,7 +24,7 @@ export function ShiftCard({ shift, now }: { shift: StaffShift; now: number }) {
   const worked = workedMinutes(shift.clockInAt, shift.clockOutAt);
 
   return (
-    <article className="overflow-hidden rounded-3xl bg-white shadow-sm">
+    <article id={`shift-${shift.id}`} className="scroll-mt-28 overflow-hidden rounded-3xl bg-white shadow-sm">
       <header className="flex items-center justify-between gap-3 px-5 py-3 text-white" style={{ background: shift.site.color }}>
         <span className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide">
           <Icon name="roster" width={18} height={18} /> {shift.label ?? "Shift"}

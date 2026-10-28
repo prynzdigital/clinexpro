@@ -20,8 +20,9 @@ export function GET() {
       { src: "/icons/staff/512", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
     shortcuts: [
-      { name: "Today's jobs", url: "/staff" },
+      { name: "Today", url: "/staff/today" },
       { name: "This week", url: "/staff/week" },
+      { name: "My hours", url: "/staff/hours" },
     ],
   };
   return new Response(JSON.stringify(manifest), {
