@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useOptimistic, useRef, useState, useTransition, type DragEvent } from "react";
 import { Icon } from "@/components/icons";
 import { SHIFT_PRESETS, hm, overlaps, shiftMinutes, shiftWindow } from "@/lib/roster";
-import { copyPreviousWeek, correctClock, deleteShift, saveShift, type RosterResult } from "./actions";
+import { addToShift, copyPreviousWeek, correctClock, deleteShift, moveShift, removeFromShift, saveShift, type RosterResult } from "./actions";
 
 export type RosterShift = {
   id: number;
@@ -33,12 +33,43 @@ const WEEK_LIMIT_MINUTES = 48 * 60;
 
 type Editing = { shift: RosterShift | null; siteId: number; date: string };
 
+// What is being dragged: a whole shift, or one person (from the team strip or off a shift).
+type Drag = { kind: "shift"; shiftId: number } | { kind: "person"; staffId: number; fromShiftId: number | null };
+type Change =
+  | { type: "move"; shiftId: number; siteId: number; date: string; copy: boolean }
+  | { type: "add"; shiftId: number; staffId: number; fromShiftId: number | null }
+  | { type: "remove"; shiftId: number; staffId: number };
+
+/** The board as it will look once the server has saved the change. */
+function applyChange(shifts: RosterShift[], c: Change): RosterShift[] {
+  const without = (s: RosterShift, staffId: number) => ({ ...s, crew: s.crew.filter((x) => x.staffId !== staffId) });
+  switch (c.type) {
+    case "move": {
+      const s = shifts.find((x) => x.id === c.shiftId);
+      if (!s) return shifts;
+      const moved = { ...s, siteId: c.siteId, date: c.date };
+      if (!c.copy) return shifts.map((x) => (x.id === c.shiftId ? moved : x));
+      return [...shifts, { ...moved, id: -Date.now(), crew: s.crew.map((x) => ({ ...x, clockInAt: null, clockOutAt: null })) }];
+    }
+    case "add":
+      return shifts.map((s) =>
+        s.id === c.shiftId && !s.crew.some((x) => x.staffId === c.staffId)
+          ? { ...s, crew: [...s.crew, { staffId: c.staffId, isLeader: false, clockInAt: null, clockOutAt: null }] }
+          : s.id === c.fromShiftId
+            ? without(s, c.staffId)
+            : s,
+      );
+    case "remove":
+      return shifts.map((s) => (s.id === c.shiftId ? without(s, c.staffId) : s));
+  }
+}
+
 export function RosterBoard({
   monday,
   days,
   today,
   sites,
-  shifts,
+  shifts: savedShifts,
   staff,
   crews,
   busy,
@@ -58,16 +89,62 @@ export function RosterBoard({
   const [notice, setNotice] = useState<{ tone: "error" | "warning" | "ok"; text: string } | null>(null);
   const [pending, start] = useTransition();
   const person = useMemo(() => new Map(staff.map((p) => [p.id, p])), [staff]);
+  const [shifts, preview] = useOptimistic(savedShifts, applyChange);
+  const [drag, setDrag] = useState<Drag | null>(null);
+  const [over, setOver] = useState<string | null>(null);
+
+  const run = (change: Change, done: string) =>
+    start(async () => {
+      preview(change);
+      const r =
+        change.type === "move"
+          ? await moveShift(change)
+          : change.type === "add"
+            ? await addToShift(change)
+            : await removeFromShift(change);
+      report(r, done);
+    });
+
+  const startDrag = (e: DragEvent, d: Drag) => {
+    e.stopPropagation();
+    e.dataTransfer.effectAllowed = "copyMove";
+    e.dataTransfer.setData("text/plain", JSON.stringify(d)); // Firefox only starts a drag with data set
+    setDrag(d);
+  };
+  const endDrag = () => {
+    setDrag(null);
+    setOver(null);
+  };
+  /** Drop-target props; `accepts` says whether the current drag can land here. */
+  const target = (key: string, accepts: boolean, onDrop: (e: DragEvent) => void) => ({
+    onDragOver: (e: DragEvent) => {
+      if (!accepts) return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.dataTransfer.dropEffect = drag?.kind === "shift" && (e.ctrlKey || e.metaKey || e.altKey) ? "copy" : "move";
+      if (over !== key) setOver(key);
+    },
+    onDragLeave: (e: DragEvent) => {
+      if (!e.currentTarget.contains(e.relatedTarget as Node | null) && over === key) setOver(null);
+    },
+    onDrop: (e: DragEvent) => {
+      if (!accepts) return;
+      e.preventDefault();
+      e.stopPropagation();
+      onDrop(e);
+      endDrag();
+    },
+  });
 
   const clashOf = (s: RosterShift, staffId: number) => {
     const w = shiftWindow(s.date, s.start, s.end);
     return busy.filter((b) => b.staffId === staffId && b.shiftId !== s.id && overlaps(w, b));
   };
 
-  const report = (r: RosterResult) => {
+  const report = (r: RosterResult, done = "Saved.") => {
     if (!r.ok) setNotice({ tone: "error", text: r.error });
-    else if (r.warning) setNotice({ tone: "warning", text: r.warning });
-    else setNotice({ tone: "ok", text: "Saved." });
+    else if (r.warning) setNotice({ tone: "warning", text: `${done} ${r.warning}` });
+    else setNotice({ tone: "ok", text: done });
   };
 
   // Planned hours this week per person (shifts + jobs), to spot overwork.
@@ -108,6 +185,32 @@ export function RosterBoard({
         </p>
       )}
 
+      <section
+        aria-label="Team"
+        {...target("team", drag?.kind === "person" && drag.fromShiftId !== null, () => {
+          if (drag?.kind === "person" && drag.fromShiftId) run({ type: "remove", shiftId: drag.fromShiftId, staffId: drag.staffId }, `${person.get(drag.staffId)?.name} taken off the shift.`);
+        })}
+        className={`card flex flex-wrap items-center gap-2 p-3 transition-colors ${over === "team" ? "bg-rose-50 ring-2 ring-rose-300" : ""}`}
+      >
+        <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-ink-soft">
+          {drag?.kind === "person" && drag.fromShiftId ? "Drop here to take off the shift" : "Team · drag onto a shift"}
+        </span>
+        {staff.filter((p) => p.active).map((p) => (
+          <span
+            key={p.id}
+            draggable
+            onDragStart={(e) => startDrag(e, { kind: "person", staffId: p.id, fromShiftId: null })}
+            onDragEnd={endDrag}
+            className="flex cursor-grab items-center gap-1.5 rounded-full border border-line bg-white py-1 pl-1 pr-3 text-sm shadow-sm active:cursor-grabbing"
+          >
+            <span className="grid size-6 place-items-center rounded-full text-[10px] font-bold text-white" style={{ background: p.color }} aria-hidden>
+              {initials(p.name)}
+            </span>
+            {p.name}
+          </span>
+        ))}
+      </section>
+
       <div className="card overflow-x-auto">
         <div className="grid min-w-[1040px]" style={{ gridTemplateColumns: "170px repeat(7, minmax(0, 1fr))" }}>
           <div className="sticky left-0 z-10 border-b border-line bg-white" />
@@ -124,19 +227,48 @@ export function RosterBoard({
               </div>
               {days.map((d) => {
                 const list = shifts.filter((s) => s.siteId === site.id && s.date === d).sort((a, b) => a.start.localeCompare(b.start));
+                const cell = `${site.id}:${d}`;
                 return (
-                  <div key={d} data-cell={`${site.id}:${d}`} className={`group relative min-h-24 space-y-1.5 border-b border-l border-line p-1.5 ${d === today ? "bg-brand-soft/30" : ""}`}>
+                  <div
+                    key={d}
+                    data-cell={cell}
+                    {...target(cell, drag?.kind === "shift", (e) => {
+                      if (drag?.kind !== "shift") return;
+                      const copy = e.ctrlKey || e.metaKey || e.altKey;
+                      run({ type: "move", shiftId: drag.shiftId, siteId: site.id, date: d, copy }, `Shift ${copy ? "copied" : "moved"} to ${site.name}, ${dayLabel(d)}.`);
+                    })}
+                    className={`group relative min-h-24 space-y-1.5 border-b border-l border-line p-1.5 transition-colors ${over === cell ? "bg-sky-50 outline-2 -outline-offset-2 outline-sky-400 outline-dashed" : d === today ? "bg-brand-soft/30" : ""}`}
+                  >
                     {list.map((s) => {
                       const short = s.crew.length < s.headcount;
                       const clash = s.crew.some((c) => clashOf(s, c.staffId).length > 0);
                       const leader = s.crew.find((c) => c.isLeader);
+                      const saved = s.id > 0;
+                      const open = () => saved && setEditing({ shift: s, siteId: s.siteId, date: s.date });
+                      const takesPerson = saved && drag?.kind === "person" && drag.fromShiftId !== s.id && !s.crew.some((c) => c.staffId === drag.staffId);
                       return (
-                        <button
+                        <div
                           key={s.id}
-                          type="button"
+                          role="button"
+                          tabIndex={0}
                           data-shift={s.id}
-                          onClick={() => setEditing({ shift: s, siteId: s.siteId, date: s.date })}
-                          className={`block w-full rounded-lg border bg-white p-1.5 text-left text-xs shadow-sm hover:shadow ${clash ? "border-danger ring-1 ring-danger" : "border-line"}`}
+                          draggable={saved}
+                          onDragStart={(e) => startDrag(e, { kind: "shift", shiftId: s.id })}
+                          onDragEnd={endDrag}
+                          {...target(`s${s.id}`, takesPerson, () => {
+                            if (drag?.kind !== "person") return;
+                            const who = person.get(drag.staffId)?.name;
+                            run({ type: "add", shiftId: s.id, staffId: drag.staffId, fromShiftId: drag.fromShiftId }, `${who} ${drag.fromShiftId ? "moved" : "added"} to ${s.label || "the shift"}, ${dayLabel(s.date)}.`);
+                          })}
+                          onClick={open}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              open();
+                            }
+                          }}
+                          aria-label={`${s.label || "Shift"} ${s.start} to ${s.end}, ${s.crew.length} of ${s.headcount} people. Drag to move, Ctrl-drag to copy.`}
+                          className={`block w-full cursor-grab rounded-lg border bg-white p-1.5 text-left text-xs shadow-sm transition hover:shadow active:cursor-grabbing ${clash ? "border-danger ring-1 ring-danger" : "border-line"} ${over === `s${s.id}` ? "ring-2 ring-sky-400" : ""} ${drag?.kind === "shift" && drag.shiftId === s.id ? "opacity-40" : ""} ${saved ? "" : "animate-pulse"}`}
                           style={{ borderLeft: `4px solid ${site.color}` }}
                         >
                           <span className="flex items-center justify-between gap-1 font-semibold">
@@ -153,7 +285,10 @@ export function RosterBoard({
                                 return (
                                   <span
                                     key={c.staffId}
-                                    title={`${p?.name}${c.isLeader ? " (leader)" : ""}`}
+                                    draggable={saved}
+                                    onDragStart={(e) => startDrag(e, { kind: "person", staffId: c.staffId, fromShiftId: s.id })}
+                                    onDragEnd={endDrag}
+                                    title={`${p?.name}${c.isLeader ? " (leader)" : ""}. Drag to another shift, or back to the team to remove.`}
                                     className={`grid size-5 place-items-center rounded-full text-[9px] font-bold text-white ${c.isLeader ? "ring-2 ring-yellow-400" : ""}`}
                                     style={{ background: p?.color ?? "#64748b" }}
                                   >
@@ -165,7 +300,7 @@ export function RosterBoard({
                           )}
                           {leader && <span className="mt-0.5 block truncate text-[10px] text-ink-soft">★ {person.get(leader.staffId)?.name}</span>}
                           {clash && <span className="block text-[10px] font-semibold text-danger">Overlap</span>}
-                        </button>
+                        </div>
                       );
                     })}
                     <button
@@ -183,7 +318,7 @@ export function RosterBoard({
           ))}
         </div>
       </div>
-      <p className="text-xs text-ink-soft">Click a shift to change its times or crew. ★ marks the leader; a red outline means someone is booked twice.</p>
+      <p className="text-xs text-ink-soft">Click a shift to change its times or crew. Drag a shift to another day or site to move it; hold Ctrl to copy it. Drag people from the team onto a shift, between shifts, or back to the team to remove them. ★ marks the leader; a red outline means someone is booked twice.</p>
 
       {load.length > 0 && (
         <section className="card p-5">

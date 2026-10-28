@@ -86,6 +86,81 @@ export async function deleteShift(shiftId: number): Promise<RosterResult> {
   return { ok: true };
 }
 
+const ids = z.object({ shiftId: z.number().int().positive(), staffId: z.number().int().positive() });
+
+function changed() {
+  revalidatePath("/admin", "layout");
+  revalidatePath("/staff", "layout");
+}
+
+/** Drag a shift to another day or site; with `copy` the original stays and its crew comes along. */
+export async function moveShift(input: { shiftId: number; siteId: number; date: string; copy: boolean }): Promise<RosterResult> {
+  await requireAdmin();
+  const parsed = z.object({ shiftId: z.number().int().positive(), siteId: z.number().int().positive(), date: isoDate, copy: z.boolean() }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Couldn't move that shift." };
+  const { shiftId, siteId, date, copy } = parsed.data;
+  const db = await getDb();
+  const [shift] = await db.select().from(schema.shifts).where(eq(schema.shifts.id, shiftId));
+  if (!shift) return { ok: false, error: "That shift no longer exists." };
+  const crew = await db.select().from(schema.shiftAssignments).where(eq(schema.shiftAssignments.shiftId, shiftId));
+
+  let target = shiftId;
+  if (copy) {
+    target = await db.transaction(async (tx) => {
+      const [row] = await tx
+        .insert(schema.shifts)
+        .values({ siteId, date, start: shift.start, end: shift.end, label: shift.label, headcount: shift.headcount, notes: shift.notes })
+        .returning({ id: schema.shifts.id });
+      if (crew.length) await tx.insert(schema.shiftAssignments).values(crew.map((c) => ({ shiftId: row.id, staffId: c.staffId, isLeader: c.isLeader })));
+      return row.id;
+    });
+  } else {
+    if (shift.siteId === siteId && shift.date === date) return { ok: true };
+    if (crew.some((c) => c.clockInAt)) return { ok: false, error: "Someone has clocked in on this shift, so it stays put. Hold Ctrl while dragging to copy it instead." };
+    await db.update(schema.shifts).set({ siteId, date }).where(eq(schema.shifts.id, shiftId));
+  }
+  changed();
+  return { ok: true, warning: await clashes([target]) };
+}
+
+/** Drop a cleaner on a shift; `fromShiftId` when they were dragged off another shift. */
+export async function addToShift(input: { shiftId: number; staffId: number; fromShiftId?: number | null }): Promise<RosterResult> {
+  await requireAdmin();
+  const parsed = ids.extend({ fromShiftId: z.number().int().positive().nullish() }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Couldn't add that person." };
+  const { shiftId, staffId, fromShiftId } = parsed.data;
+  if (fromShiftId === shiftId) return { ok: true };
+  const db = await getDb();
+  const a = schema.shiftAssignments;
+  const [person] = await db.select({ active: schema.staff.active }).from(schema.staff).where(eq(schema.staff.id, staffId));
+  if (!person?.active) return { ok: false, error: "That person is no longer active." };
+  if (fromShiftId) {
+    const [from] = await db.select().from(a).where(and(eq(a.shiftId, fromShiftId), eq(a.staffId, staffId)));
+    if (from?.clockInAt) return { ok: false, error: "They've already clocked in on their shift, so they can't be moved off it." };
+  }
+  await db.transaction(async (tx) => {
+    await tx.insert(a).values({ shiftId, staffId, isLeader: false }).onConflictDoNothing();
+    if (fromShiftId) await tx.delete(a).where(and(eq(a.shiftId, fromShiftId), eq(a.staffId, staffId)));
+  });
+  changed();
+  return { ok: true, warning: await clashes([shiftId]) };
+}
+
+/** Drag a cleaner off a shift (back to the team list). */
+export async function removeFromShift(input: { shiftId: number; staffId: number }): Promise<RosterResult> {
+  await requireAdmin();
+  const parsed = ids.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Couldn't remove that person." };
+  const db = await getDb();
+  const a = schema.shiftAssignments;
+  const where = and(eq(a.shiftId, parsed.data.shiftId), eq(a.staffId, parsed.data.staffId));
+  const [row] = await db.select().from(a).where(where);
+  if (row?.clockInAt) return { ok: false, error: "They've already clocked in, so they stay on the timesheet. Correct their clock times instead." };
+  await db.delete(a).where(where);
+  changed();
+  return { ok: true };
+}
+
 /** Copies the previous week's shifts and crews into this week (skipping ones already there). */
 export async function copyPreviousWeek(monday: string): Promise<RosterResult> {
   await requireAdmin();
